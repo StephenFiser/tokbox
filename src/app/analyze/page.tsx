@@ -132,6 +132,102 @@ const MOOD_OPTIONS = [
 
 type MoodId = typeof MOOD_OPTIONS[number]['id'];
 
+// Dynamic loading screen with cycling messages
+function AnalyzingScreen() {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  
+  const ANALYSIS_STEPS = [
+    { text: 'Uploading video...', duration: 2000 },
+    { text: 'Extracting key frames...', duration: 3000 },
+    { text: 'Analyzing visual composition...', duration: 4000 },
+    { text: 'Evaluating hook potential...', duration: 5000 },
+    { text: 'Checking pacing & energy...', duration: 4000 },
+    { text: 'Studying successful patterns...', duration: 4000 },
+    { text: 'Generating custom hooks...', duration: 5000 },
+    { text: 'Crafting caption ideas...', duration: 4000 },
+    { text: 'Calculating viral potential...', duration: 3000 },
+    { text: 'Finalizing your analysis...', duration: 10000 },
+  ];
+  
+  useEffect(() => {
+    // Timer to track elapsed time
+    const elapsedTimer = setInterval(() => {
+      setElapsed(e => e + 1);
+    }, 1000);
+    
+    // Step progression
+    let stepTimer: NodeJS.Timeout;
+    const advanceStep = (index: number) => {
+      if (index < ANALYSIS_STEPS.length - 1) {
+        stepTimer = setTimeout(() => {
+          setStepIndex(index + 1);
+          advanceStep(index + 1);
+        }, ANALYSIS_STEPS[index].duration);
+      }
+    };
+    advanceStep(0);
+    
+    return () => {
+      clearInterval(elapsedTimer);
+      clearTimeout(stepTimer);
+    };
+  }, []);
+  
+  const currentStep = ANALYSIS_STEPS[stepIndex];
+  const completedSteps = ANALYSIS_STEPS.slice(0, stepIndex);
+  
+  return (
+    <div className="min-h-screen bg-[#09090b] flex flex-col">
+      {/* Ambient background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/[0.08] rounded-full blur-[120px] animate-pulse-soft" />
+      </div>
+      
+      <Navbar sticky showPricing={false} />
+      
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
+        {/* Animated loader */}
+        <div className="relative mb-8">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-purple-500/30">
+            <ArrowPathIcon className="w-8 h-8 text-white animate-spin" />
+          </div>
+        </div>
+        
+        <h2 className="text-xl font-semibold mb-2">Analyzing your video</h2>
+        
+        {/* Time estimate */}
+        <p className="text-zinc-500 text-[13px] mb-6">
+          This usually takes 30-60 seconds
+        </p>
+        
+        {/* Dynamic current step */}
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-5 py-3 mb-6">
+          <div className="flex items-center gap-3">
+            <ArrowPathIcon className="w-4 h-4 animate-spin text-purple-400" />
+            <span className="text-[15px] text-white">{currentStep.text}</span>
+          </div>
+        </div>
+        
+        {/* Completed steps */}
+        <div className="space-y-2 text-[13px] max-h-32 overflow-hidden">
+          {completedSteps.slice(-4).map((step, i) => (
+            <div key={i} className="flex items-center gap-2 text-zinc-500 animate-fade-in">
+              <CheckIcon className="w-3.5 h-3.5 text-emerald-500/70" />
+              <span>{step.text.replace('...', '')}</span>
+            </div>
+          ))}
+        </div>
+        
+        {/* Elapsed time */}
+        <p className="text-zinc-600 text-[12px] mt-8">
+          {elapsed}s elapsed
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // Conversion card for free users
 function ConversionCard({ onAnalyzeAnother }: { onAnalyzeAnother: () => void }) {
   return (
@@ -583,46 +679,7 @@ export default function AnalyzePage() {
 
   // Show fullscreen loading when analyzing
   if (analyzing) {
-    return (
-      <div className="min-h-screen bg-[#09090b] flex flex-col">
-        {/* Ambient background */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/[0.08] rounded-full blur-[120px] animate-pulse-soft" />
-        </div>
-        
-        <Navbar sticky showPricing={false} />
-        
-        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
-          {/* Animated loader */}
-          <div className="relative mb-8">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-purple-500/30">
-              <ArrowPathIcon className="w-8 h-8 text-white animate-spin" />
-            </div>
-          </div>
-          
-          <h2 className="text-xl font-semibold mb-3">Analyzing your video</h2>
-          <p className="text-zinc-400 text-center max-w-xs mb-8">
-            Our AI is reviewing your content for viral potential, hook strength, and visual quality
-          </p>
-          
-          {/* Progress steps */}
-          <div className="space-y-3 text-[14px]">
-            <div className="flex items-center gap-3 text-zinc-400">
-              <CheckIcon className="w-4 h-4 text-emerald-400" />
-              <span>Video uploaded</span>
-            </div>
-            <div className="flex items-center gap-3 text-zinc-400">
-              <CheckIcon className="w-4 h-4 text-emerald-400" />
-              <span>Extracting key frames</span>
-            </div>
-            <div className="flex items-center gap-3 text-white">
-              <ArrowPathIcon className="w-4 h-4 animate-spin text-purple-400" />
-              <span>AI analysis in progress...</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <AnalyzingScreen />;
   }
 
   return (

@@ -57,10 +57,10 @@ interface VideoAnalysisResult {
   numFrames: number;
 }
 
-async function analyzeVideoWithService(videoBlob: Blob): Promise<VideoAnalysisResult | null> {
+async function analyzeVideoWithService(videoBlob: Blob, filename: string = 'video.mp4'): Promise<VideoAnalysisResult | null> {
   try {
     const formData = new FormData();
-    formData.append('video', videoBlob, 'video.mp4');
+    formData.append('video', videoBlob, filename);
     formData.append('num_frames', '10');
     
     const response = await fetch(`${EMBEDDING_SERVICE_URL}/analyze-video`, {
@@ -1299,9 +1299,10 @@ export async function POST(request: NextRequest) {
     
     console.log(`Starting analysis for user ${userId} (${userPlan} plan, ${modelTier} tier)`);
     
-    // Call embedding service for frames
-    console.log('Extracting frames...');
-    const videoAnalysis = await analyzeVideoWithService(videoBlob);
+    // Call embedding service for frames (pass original filename for format detection)
+    const originalFilename = videoFile.name || 'video.mp4';
+    console.log(`Extracting frames from ${originalFilename}...`);
+    const videoAnalysis = await analyzeVideoWithService(videoBlob, originalFilename);
     
     if (!videoAnalysis || videoAnalysis.frames.length === 0) {
       return NextResponse.json({ 
