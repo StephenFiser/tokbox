@@ -376,3 +376,53 @@ h1, h2, h3, h4, h5, h6 {
 .cl-alertText {
   color: #f87171 !important;
 }
+
+/* ===== Clerk Modal/Checkout Overrides ===== */
+
+/* Modal backdrop - ensure it covers content */
+.cl-modalBackdrop {
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  z-index: 9998 !important;
+  position: fixed !important;
+  inset: 0 !important;
+}
+
+/* Modal container */
+.cl-modal,
+.cl-modalContent {
+  z-index: 9999 !important;
+  position: fixed !important;
+}
+
+/* Checkout/Pricing modal */
+.cl-checkout,
+[data-clerk-checkout] {
+  z-index: 9999 !important;
+}
+
+/* Root modal portal */
+.cl-rootBox[data-clerk-component] {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+}
+
+/* Ensure pricing table checkout modal has proper overlay */
+.cl-pricingTable__modal,
+.cl-modalRoot {
+  z-index: 9999 !important;
+}
+
+/* Full screen overlay for checkout */
+[data-clerk-component="checkout"],
+[data-clerk-component="PricingTable"] .cl-rootBox:not(:first-child) {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  background: rgba(0, 0, 0, 0.9) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}

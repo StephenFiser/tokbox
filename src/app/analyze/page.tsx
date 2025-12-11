@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDropzone } from 'react-dropzone';
-import { useUser } from '@clerk/nextjs';
+import { useUser, PricingTable } from '@clerk/nextjs';
 import { Navbar } from '@/components/Navbar';
 
 // Clean up any legacy IndexedDB data
@@ -711,40 +711,22 @@ export default function AnalyzePage() {
             </div>
             
             {isSignedIn ? (
-              <>
-                {/* Inline pricing cards */}
-                <div className="space-y-3 mb-6">
-                  <a 
-                    href="/pricing" 
-                    className="block p-5 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 hover:border-purple-500/50 transition-all duration-200 cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-white">Creator</span>
-                      <span className="text-purple-400 font-semibold">$9/mo</span>
-                    </div>
-                    <p className="text-[13px] text-zinc-400">30 analyses per month</p>
-                  </a>
-                  
-                  <a 
-                    href="/pricing" 
-                    className="block p-5 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] transition-all duration-200 cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-white">Pro</span>
-                      <span className="text-zinc-300 font-semibold">$19/mo</span>
-                    </div>
-                    <p className="text-[13px] text-zinc-400">5 analyses per day, every day</p>
-                  </a>
-                </div>
-                
-                <a
-                  href="/pricing"
-                  className="flex items-center justify-center gap-2 w-full py-4 text-center text-[15px] font-semibold rounded-xl btn-premium cursor-pointer"
-                >
-                  View Plans
-                  <ArrowRightIcon className="w-4 h-4" />
-                </a>
-              </>
+              <div className="max-w-md mx-auto">
+                <PricingTable 
+                  appearance={{
+                    variables: {
+                      colorPrimary: '#a855f7',
+                      colorBackground: '#18181b',
+                      colorText: '#fafafa',
+                      colorTextSecondary: '#a1a1aa',
+                    },
+                    elements: {
+                      card: 'bg-zinc-900 border-zinc-800 rounded-2xl',
+                      button: 'btn-premium',
+                    },
+                  }}
+                />
+              </div>
             ) : (
               <a
                 href="/sign-in?redirect_url=/analyze"
