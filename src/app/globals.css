@@ -379,50 +379,97 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ===== Clerk Modal/Checkout Overrides ===== */
 
-/* Modal backdrop - ensure it covers content */
-.cl-modalBackdrop {
-  background: rgba(0, 0, 0, 0.85) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  z-index: 9998 !important;
-  position: fixed !important;
-  inset: 0 !important;
+/* Target Clerk's portal/modal root */
+.cl-rootBox {
+  z-index: 10000 !important;
 }
 
-/* Modal container */
-.cl-modal,
-.cl-modalContent {
-  z-index: 9999 !important;
-  position: fixed !important;
-}
-
-/* Checkout/Pricing modal */
+/* Checkout card needs solid background */
 .cl-checkout,
-[data-clerk-checkout] {
-  z-index: 9999 !important;
+.cl-checkoutCard,
+[class*="cl-checkout"] {
+  background: #09090b !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
 }
 
-/* Root modal portal */
-.cl-rootBox[data-clerk-component] {
+/* Modal backdrop overlay */
+.cl-modalBackdrop,
+[class*="modalBackdrop"],
+[class*="Backdrop"] {
+  background: rgba(0, 0, 0, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  z-index: 9999 !important;
   position: fixed !important;
   inset: 0 !important;
-  z-index: 9999 !important;
 }
 
-/* Ensure pricing table checkout modal has proper overlay */
-.cl-pricingTable__modal,
-.cl-modalRoot {
-  z-index: 9999 !important;
+/* Modal content wrapper */
+.cl-modal,
+.cl-modalContent,
+[class*="modal"] {
+  z-index: 10000 !important;
 }
 
-/* Full screen overlay for checkout */
-[data-clerk-component="checkout"],
-[data-clerk-component="PricingTable"] .cl-rootBox:not(:first-child) {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 9999 !important;
-  background: rgba(0, 0, 0, 0.9) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+/* Ensure the checkout form content is visible */
+.cl-checkoutFormContainer,
+.cl-formContainer {
+  background: #0a0a0c !important;
+}
+
+/* Payment form inputs */
+.cl-checkoutFormFieldInput,
+[class*="checkoutFormField"] input {
+  background: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+}
+
+/* Labels in checkout */
+.cl-checkoutFormFieldLabel,
+[class*="checkoutFormField"] label {
+  color: #d4d4d8 !important;
+}
+
+/* Checkout text elements */
+.cl-checkoutTitle,
+.cl-checkoutSubtitle,
+.cl-checkoutText,
+[class*="checkout"] span,
+[class*="checkout"] p,
+[class*="checkout"] div {
+  color: white !important;
+}
+
+/* Price display */
+.cl-checkoutPrice,
+[class*="Price"] {
+  color: white !important;
+}
+
+/* Make sure checkout portal is on top of everything */
+#clerk-components,
+[id*="clerk"],
+.cl-rootBox > div[style*="position: fixed"] {
+  z-index: 10001 !important;
+}
+
+/* Force solid background on any checkout-related wrapper */
+div[class*="checkout"]:not([class*="Button"]) {
+  background-color: #09090b !important;
+}
+
+/* Stripe iframe container */
+.cl-paymentMethodList,
+[class*="paymentMethod"] {
+  background: #0f0f11 !important;
+  border-radius: 12px !important;
+}
+
+/* Close button */
+.cl-modalCloseButton,
+[class*="closeButton"] {
+  z-index: 10002 !important;
+  color: white !important;
 }
