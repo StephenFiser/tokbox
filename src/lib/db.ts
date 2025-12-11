@@ -64,9 +64,17 @@ export async function initDb() {
       grade TEXT,
       viral_score REAL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      model_used TEXT DEFAULT 'premium'
+      model_used TEXT DEFAULT 'premium',
+      results_json TEXT
     )
   `);
+  
+  // Add results_json column if it doesn't exist (migration for existing tables)
+  try {
+    await db.execute(`ALTER TABLE analyses ADD COLUMN results_json TEXT`);
+  } catch {
+    // Column already exists
+  }
   
   // Index for fast user lookups
   await db.execute(`
@@ -94,6 +102,7 @@ export async function trackAnalysis({
   grade,
   viralScore,
   modelUsed,
+  resultsJson,
 }: {
   userId?: string | null;
   userEmail?: string | null;
@@ -103,14 +112,40 @@ export async function trackAnalysis({
   grade?: string;
   viralScore?: number;
   modelUsed: 'premium' | 'fast';
-}) {
-  await db.execute({
+  resultsJson?: string;
+}): Promise<number> {
+  const result = await db.execute({
     sql: `
-      INSERT INTO analyses (user_id, user_email, ip_address, mood, video_duration_seconds, grade, viral_score, model_used)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO analyses (user_id, user_email, ip_address, mood, video_duration_seconds, grade, viral_score, model_used, results_json)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
-    args: [userId || null, userEmail || null, ipAddress || null, mood, videoDurationSeconds || null, grade || null, viralScore || null, modelUsed],
+    args: [userId || null, userEmail || null, ipAddress || null, mood, videoDurationSeconds || null, grade || null, viralScore || null, modelUsed, resultsJson || null],
   });
+  return Number(result.lastInsertRowid);
+}
+
+// Get user's analysis history
+export async function getUserAnalysisHistory(userId: string, limit: number = 50) {
+  const result = await db.execute({
+    sql: `
+      SELECT id, mood, grade, viral_score, created_at, results_json
+      FROM analyses 
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+      LIMIT ?
+    `,
+    args: [userId, limit],
+  });
+  return result.rows;
+}
+
+// Get a single analysis by ID (for viewing details)
+export async function getAnalysisById(analysisId: number, userId: string) {
+  const result = await db.execute({
+    sql: `SELECT * FROM analyses WHERE id = ? AND user_id = ?`,
+    args: [analysisId, userId],
+  });
+  return result.rows[0] || null;
 }
 
 // Check if IP has already used free analysis

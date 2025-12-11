@@ -1420,22 +1420,10 @@ export async function POST(request: NextRequest) {
     };
     const { grade, color, potential } = calculateGrade(scores);
     
-    // Track the analysis for usage limits and leads
-    await trackAnalysis({
-      userId: userId || null,
-      userEmail: user?.emailAddresses?.[0]?.emailAddress || null,
-      ipAddress: !userId ? clientIp : null, // Only track IP for anonymous users
-      mood: mood || 'unspecified',
-      videoDurationSeconds: videoAnalysis.duration || undefined,
-      grade,
-      viralScore: potential,
-      modelUsed: modelTier,
-    });
-    
     const processingTime = Date.now() - startTime;
-    console.log(`Analysis complete in ${processingTime}ms for ${userId} (${mood || 'no mood'})`);
     
-    return NextResponse.json({
+    // Build the response object (also saved to DB for history)
+    const responseData = {
       id: analysisId,
       processingTimeMs: processingTime,
       
@@ -1496,8 +1484,26 @@ export async function POST(request: NextRequest) {
         whatMatters: moodStrategy.whatMatters.slice(0, 3),
         advancedTips: moodStrategy.advancedTips.slice(0, 2),
       } : null,
-      
-      // Usage info (for conversion UI)
+    };
+    
+    // Track the analysis for usage limits and leads (with full results for history)
+    await trackAnalysis({
+      userId: userId || null,
+      userEmail: user?.emailAddresses?.[0]?.emailAddress || null,
+      ipAddress: !userId ? clientIp : null, // Only track IP for anonymous users
+      mood: mood || 'unspecified',
+      videoDurationSeconds: videoAnalysis.duration || undefined,
+      grade,
+      viralScore: potential,
+      modelUsed: modelTier,
+      resultsJson: userId ? JSON.stringify(responseData) : undefined, // Only save for logged-in users
+    });
+    
+    console.log(`Analysis complete in ${processingTime}ms for ${userId || 'anonymous'} (${mood || 'no mood'})`);
+    
+    return NextResponse.json({
+      ...responseData,
+      // Usage info (for conversion UI) - not saved to history
       usage: {
         plan: userPlan,
         modelUsed: modelTier,

@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { SignedIn, SignedOut, UserButton, useClerk } from '@clerk/nextjs';
-import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
+import { SignedIn, SignedOut } from '@clerk/nextjs';
+import { AccountDropdown } from './AccountDropdown';
 
 // Custom TokBox logo - a stylized play button in a box
 export function TokBoxLogo({ className = "w-9 h-9" }: { className?: string }) {
@@ -42,7 +42,6 @@ interface NavbarProps {
 }
 
 export function Navbar({ showPricing = true, rightContent, sticky = false }: NavbarProps) {
-  const { signOut } = useClerk();
   const baseClasses = "relative z-50 px-6 py-4";
   const stickyClasses = sticky 
     ? "sticky top-0 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/[0.04]" 
@@ -58,7 +57,7 @@ export function Navbar({ showPricing = true, rightContent, sticky = false }: Nav
         </Link>
 
         {/* Right side */}
-        <div className="flex items-center gap-5" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+        <div className="flex items-center gap-5">
           {showPricing && (
             <Link
               href="/pricing"
@@ -80,13 +79,7 @@ export function Navbar({ showPricing = true, rightContent, sticky = false }: Nav
           </SignedOut>
           
           <SignedIn>
-            <button
-              onClick={() => signOut({ redirectUrl: '/' })}
-              className="inline-flex items-center gap-1.5 text-[14px] text-zinc-400 hover:text-white transition-colors whitespace-nowrap"
-            >
-              <ArrowRightStartOnRectangleIcon className="w-4 h-4" />
-              Sign out
-            </button>
+            <AccountDropdown />
           </SignedIn>
         </div>
       </div>

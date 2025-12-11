@@ -22,18 +22,30 @@ export async function GET() {
     
     let limitReached = false;
     let message = '';
+    let analysesUsed = 0;
+    let analysesLimit = 1;
+    let periodLabel = 'total';
     
     if (plan === 'free') {
       const totalCount = await getTotalAnalysisCount(userId);
-      limitReached = totalCount >= USAGE_LIMITS.free.totalAnalyses;
+      analysesUsed = totalCount;
+      analysesLimit = USAGE_LIMITS.free.totalAnalyses;
+      periodLabel = 'total';
+      limitReached = totalCount >= analysesLimit;
       message = limitReached ? 'You\'ve used your free analysis. Upgrade to continue!' : '';
     } else if (plan === 'creator') {
       const monthlyCount = await getMonthlyAnalysisCount(userId);
-      limitReached = monthlyCount >= USAGE_LIMITS.creator.monthlyAnalyses;
+      analysesUsed = monthlyCount;
+      analysesLimit = USAGE_LIMITS.creator.monthlyAnalyses;
+      periodLabel = 'this month';
+      limitReached = monthlyCount >= analysesLimit;
       message = limitReached ? 'You\'ve reached your 30 analyses this month.' : '';
     } else if (plan === 'pro') {
       const dailyCount = await getDailyAnalysisCount(userId);
-      limitReached = dailyCount >= USAGE_LIMITS.pro.dailyAnalyses;
+      analysesUsed = dailyCount;
+      analysesLimit = USAGE_LIMITS.pro.dailyAnalyses;
+      periodLabel = 'today';
+      limitReached = dailyCount >= analysesLimit;
       message = limitReached ? 'You\'ve reached your 5 analyses for today. Come back tomorrow!' : '';
     }
     
@@ -41,6 +53,9 @@ export async function GET() {
       limitReached,
       plan,
       message,
+      analysesUsed,
+      analysesLimit,
+      periodLabel,
       email: user?.emailAddresses?.[0]?.emailAddress,
     });
     
