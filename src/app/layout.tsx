@@ -39,12 +39,20 @@ export default function RootLayout({
         variables: {
           colorPrimary: '#a855f7',
           colorBackground: '#0a0a0a',
+          colorInputBackground: '#27272a',
+          colorInputText: '#ffffff',
           colorText: '#ffffff',
           colorTextSecondary: '#a1a1aa',
+          colorNeutral: '#71717a',
+          colorDanger: '#ef4444',
+          borderRadius: '12px',
         },
         elements: {
           formButtonPrimary: 'bg-purple-500 hover:bg-purple-600',
           card: 'bg-zinc-900 border-zinc-800',
+          formFieldInput: 'bg-zinc-800 border-zinc-700 text-white',
+          drawerRoot: 'bg-zinc-950',
+          drawerContent: 'bg-zinc-950',
         },
       }}
     >

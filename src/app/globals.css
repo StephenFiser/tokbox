@@ -387,11 +387,3 @@ h1, h2, h3, h4, h5, h6 {
 .cl-drawerRoot {
   z-index: 999999999 !important;
 }
-
-
-
-.Input, .p-FauxInput {
-  background: #27272a !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: white !important;
-}
