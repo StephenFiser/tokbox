@@ -15,6 +15,7 @@ import {
   getMonthlyAnalysisCount,
   getDailyAnalysisCount,
   getMonthlyPremiumCount,
+  hasIpUsedFreeAnalysis,
   USAGE_LIMITS,
   PLAN_IDS,
 } from '@/lib/db';
@@ -1248,54 +1249,74 @@ export async function POST(request: NextRequest) {
     // Initialize database tables if needed
     await initDb();
     
-    // Get authenticated user
+    // Get client IP for anonymous tracking
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : 'unknown';
+    
+    // Get authenticated user (optional - anonymous users allowed for first analysis)
     const { userId, has } = await auth();
-    const user = await currentUser();
+    const user = userId ? await currentUser() : null;
     
-    if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
+    // Determine user's plan and usage
+    let userPlan: 'anonymous' | 'free' | 'creator' | 'pro' = 'anonymous';
+    let totalCount = 0;
+    let monthlyCount = 0;
+    let dailyCount = 0;
+    let premiumCount = 0;
     
-    // Determine user's plan
-    const hasPro = has?.({ plan: 'pro' }) || false;
-    const hasCreator = has?.({ plan: 'creator' }) || false;
-    const userPlan = hasPro ? 'pro' : hasCreator ? 'creator' : 'free';
-    
-    // Check usage limits
-    const totalCount = await getTotalAnalysisCount(userId);
-    const monthlyCount = await getMonthlyAnalysisCount(userId);
-    const dailyCount = await getDailyAnalysisCount(userId);
-    const premiumCount = await getMonthlyPremiumCount(userId);
-    
-    // Enforce limits based on plan
-    if (userPlan === 'free' && totalCount >= USAGE_LIMITS.free.totalAnalyses) {
-      return NextResponse.json({ 
-        error: 'limit_reached',
-        message: 'You\'ve used your free analysis. Upgrade to continue!',
-        upgradeRequired: true,
-        currentPlan: 'free',
-        usage: { total: totalCount, limit: USAGE_LIMITS.free.totalAnalyses }
-      }, { status: 403 });
-    }
-    
-    if (userPlan === 'creator' && monthlyCount >= USAGE_LIMITS.creator.monthlyAnalyses) {
-      return NextResponse.json({ 
-        error: 'limit_reached',
-        message: 'You\'ve reached your 30 analyses this month. Upgrade to Pro for more!',
-        upgradeRequired: true,
-        currentPlan: 'creator',
-        usage: { monthly: monthlyCount, limit: USAGE_LIMITS.creator.monthlyAnalyses }
-      }, { status: 403 });
-    }
-    
-    if (userPlan === 'pro' && dailyCount >= USAGE_LIMITS.pro.dailyAnalyses) {
-      return NextResponse.json({ 
-        error: 'limit_reached',
-        message: 'You\'ve reached your 5 analyses for today. Come back tomorrow!',
-        upgradeRequired: false,
-        currentPlan: 'pro',
-        usage: { daily: dailyCount, limit: USAGE_LIMITS.pro.dailyAnalyses }
-      }, { status: 403 });
+    if (userId) {
+      // Authenticated user - check their plan and usage
+      const hasPro = has?.({ plan: 'pro' }) || false;
+      const hasCreator = has?.({ plan: 'creator' }) || false;
+      userPlan = hasPro ? 'pro' : hasCreator ? 'creator' : 'free';
+      
+      totalCount = await getTotalAnalysisCount(userId);
+      monthlyCount = await getMonthlyAnalysisCount(userId);
+      dailyCount = await getDailyAnalysisCount(userId);
+      premiumCount = await getMonthlyPremiumCount(userId);
+      
+      // Enforce limits based on plan
+      if (userPlan === 'free' && totalCount >= USAGE_LIMITS.free.totalAnalyses) {
+        return NextResponse.json({ 
+          error: 'limit_reached',
+          message: 'You\'ve used your free analysis. Upgrade to continue!',
+          upgradeRequired: true,
+          currentPlan: 'free',
+          usage: { total: totalCount, limit: USAGE_LIMITS.free.totalAnalyses }
+        }, { status: 403 });
+      }
+      
+      if (userPlan === 'creator' && monthlyCount >= USAGE_LIMITS.creator.monthlyAnalyses) {
+        return NextResponse.json({ 
+          error: 'limit_reached',
+          message: 'You\'ve reached your 30 analyses this month. Upgrade to Pro for more!',
+          upgradeRequired: true,
+          currentPlan: 'creator',
+          usage: { monthly: monthlyCount, limit: USAGE_LIMITS.creator.monthlyAnalyses }
+        }, { status: 403 });
+      }
+      
+      if (userPlan === 'pro' && dailyCount >= USAGE_LIMITS.pro.dailyAnalyses) {
+        return NextResponse.json({ 
+          error: 'limit_reached',
+          message: 'You\'ve reached your 5 analyses for today. Come back tomorrow!',
+          upgradeRequired: false,
+          currentPlan: 'pro',
+          usage: { daily: dailyCount, limit: USAGE_LIMITS.pro.dailyAnalyses }
+        }, { status: 403 });
+      }
+    } else {
+      // Anonymous user - check if IP has already used free analysis
+      const ipUsed = await hasIpUsedFreeAnalysis(clientIp);
+      if (ipUsed) {
+        return NextResponse.json({ 
+          error: 'limit_reached',
+          message: 'Sign up to continue analyzing videos!',
+          upgradeRequired: true,
+          currentPlan: 'anonymous',
+          requiresSignUp: true,
+        }, { status: 403 });
+      }
     }
     
     // Determine model tier based on premium usage
@@ -1320,7 +1341,7 @@ export async function POST(request: NextRequest) {
     const originalFilename = videoFile.name || 'video.mp4';
     
     console.log(`Video file received: ${originalFilename}, size: ${videoFile.size} bytes, buffer size: ${videoBuffer.length} bytes`);
-    console.log(`Starting analysis for user ${userId} (${userPlan} plan, ${modelTier} tier)`);
+    console.log(`Starting analysis for ${userId || `anonymous (${clientIp})`} (${userPlan} plan, ${modelTier} tier)`);
     
     // Call embedding service (uploads to S3 first for reliable transfer)
     console.log(`Processing video: ${originalFilename}...`);
@@ -1385,8 +1406,9 @@ export async function POST(request: NextRequest) {
     
     // Track the analysis for usage limits and leads
     await trackAnalysis({
-      userId,
+      userId: userId || null,
       userEmail: user?.emailAddresses?.[0]?.emailAddress || null,
+      ipAddress: !userId ? clientIp : null, // Only track IP for anonymous users
       mood: mood || 'unspecified',
       videoDurationSeconds: videoAnalysis.duration || undefined,
       grade,
@@ -1463,13 +1485,15 @@ export async function POST(request: NextRequest) {
       usage: {
         plan: userPlan,
         modelUsed: modelTier,
-        analysesUsed: userPlan === 'free' ? totalCount + 1 : 
+        analysesUsed: userPlan === 'anonymous' ? 1 :
+                      userPlan === 'free' ? totalCount + 1 : 
                       userPlan === 'creator' ? monthlyCount + 1 : 
                       dailyCount + 1,
-        analysesLimit: userPlan === 'free' ? USAGE_LIMITS.free.totalAnalyses :
+        analysesLimit: userPlan === 'anonymous' ? 1 :
+                       userPlan === 'free' ? USAGE_LIMITS.free.totalAnalyses :
                        userPlan === 'creator' ? USAGE_LIMITS.creator.monthlyAnalyses :
                        USAGE_LIMITS.pro.dailyAnalyses,
-        isLastFreeAnalysis: userPlan === 'free' && totalCount === 0,
+        isLastFreeAnalysis: userPlan === 'anonymous' || (userPlan === 'free' && totalCount === 0),
       },
     });
     

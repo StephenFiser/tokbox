@@ -6,73 +6,20 @@ import { useDropzone } from 'react-dropzone';
 import { useUser } from '@clerk/nextjs';
 import { Navbar } from '@/components/Navbar';
 
-// IndexedDB helpers to persist video across auth redirect
-const DB_NAME = 'tokbox-temp';
-const STORE_NAME = 'pending-video';
-
-async function saveVideoToIDB(file: File, mood: string | null): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
-    request.onerror = () => reject(request.error);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
-      }
-    };
-    request.onsuccess = () => {
-      const db = request.result;
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      const store = tx.objectStore(STORE_NAME);
-      store.put({ file, mood, timestamp: Date.now() }, 'pending');
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    };
-  });
-}
-
-async function loadVideoFromIDB(): Promise<{ file: File; mood: string | null } | null> {
-  return new Promise((resolve) => {
-    const request = indexedDB.open(DB_NAME, 1);
-    request.onerror = () => resolve(null);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
-      }
-    };
-    request.onsuccess = () => {
-      const db = request.result;
-      const tx = db.transaction(STORE_NAME, 'readonly');
-      const store = tx.objectStore(STORE_NAME);
-      const getRequest = store.get('pending');
-      getRequest.onsuccess = () => {
-        const data = getRequest.result;
-        // Only use if less than 10 minutes old
-        if (data && Date.now() - data.timestamp < 10 * 60 * 1000) {
-          resolve({ file: data.file, mood: data.mood });
-        } else {
-          resolve(null);
-        }
-      };
-      getRequest.onerror = () => resolve(null);
-    };
-  });
-}
-
+// Clean up any legacy IndexedDB data
 async function clearVideoFromIDB(): Promise<void> {
-  return new Promise((resolve) => {
-    const request = indexedDB.open(DB_NAME, 1);
-    request.onerror = () => resolve();
+  try {
+    const request = indexedDB.open('tokbox-temp', 1);
     request.onsuccess = () => {
       const db = request.result;
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      const store = tx.objectStore(STORE_NAME);
-      store.delete('pending');
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => resolve();
+      if (db.objectStoreNames.contains('pending-video')) {
+        const tx = db.transaction('pending-video', 'readwrite');
+        tx.objectStore('pending-video').clear();
+      }
     };
-  });
+  } catch {
+    // Ignore errors - this is just cleanup
+  }
 }
 import {
   ArrowUpTrayIcon,
@@ -228,8 +175,8 @@ function AnalyzingScreen() {
   );
 }
 
-// Conversion card for free users
-function ConversionCard({ onAnalyzeAnother }: { onAnalyzeAnother: () => void }) {
+// Conversion card for anonymous/free users
+function ConversionCard({ onAnalyzeAnother, isAnonymous }: { onAnalyzeAnother: () => void; isAnonymous: boolean }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-purple-500/20 bg-gradient-to-b from-purple-500/[0.08] to-transparent p-6 space-y-5">
       {/* Glow effect */}
@@ -241,38 +188,51 @@ function ConversionCard({ onAnalyzeAnother }: { onAnalyzeAnother: () => void }) 
           <span className="text-[15px] font-semibold text-white">Ready for your next video?</span>
         </div>
         <p className="text-[14px] text-zinc-400 leading-relaxed">
-          You&apos;ve used your free analysis. Creators who analyze before posting see 2-3x better engagement.
+          {isAnonymous 
+            ? "Sign up to analyze more videos. Creators who analyze before posting see 2-3x better engagement."
+            : "You've used your free analysis. Upgrade to keep improving your content."}
         </p>
       </div>
       
-      <div className="relative grid grid-cols-2 gap-3">
-        {/* Creator Plan */}
+      {isAnonymous ? (
+        // Anonymous user - prompt to sign up
         <a 
-          href="/pricing"
-          className="group flex flex-col p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-purple-500/30 hover:bg-white/[0.05] transition-all duration-200"
+          href="/sign-up"
+          className="relative block w-full py-3.5 text-center text-[15px] font-semibold text-white btn-premium rounded-xl"
         >
-          <span className="text-[13px] text-zinc-500 mb-1">Creator</span>
-          <span className="text-[20px] font-bold text-white">$9<span className="text-[13px] font-normal text-zinc-500">/mo</span></span>
-          <span className="text-[12px] text-zinc-500 mt-1">30 videos/month</span>
+          Sign up free to continue
         </a>
-        
-        {/* Pro Plan */}
-        <a 
-          href="/pricing"
-          className="group flex flex-col p-4 rounded-xl bg-gradient-to-b from-purple-500/10 to-transparent border border-purple-500/20 hover:border-purple-500/40 transition-all duration-200"
-        >
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-[13px] text-purple-400">Pro</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">POPULAR</span>
-          </div>
-          <span className="text-[20px] font-bold text-white">$19<span className="text-[13px] font-normal text-zinc-500">/mo</span></span>
-          <span className="text-[12px] text-zinc-500 mt-1">5/day, priority</span>
-        </a>
-      </div>
+      ) : (
+        // Signed in but free tier - show pricing
+        <div className="relative grid grid-cols-2 gap-3">
+          {/* Creator Plan */}
+          <a 
+            href="/pricing"
+            className="group flex flex-col p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-purple-500/30 hover:bg-white/[0.05] transition-all duration-200"
+          >
+            <span className="text-[13px] text-zinc-500 mb-1">Creator</span>
+            <span className="text-[20px] font-bold text-white">$9<span className="text-[13px] font-normal text-zinc-500">/mo</span></span>
+            <span className="text-[12px] text-zinc-500 mt-1">30 videos/month</span>
+          </a>
+          
+          {/* Pro Plan */}
+          <a 
+            href="/pricing"
+            className="group flex flex-col p-4 rounded-xl bg-gradient-to-b from-purple-500/10 to-transparent border border-purple-500/20 hover:border-purple-500/40 transition-all duration-200"
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="text-[13px] text-purple-400">Pro</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">POPULAR</span>
+            </div>
+            <span className="text-[20px] font-bold text-white">$19<span className="text-[13px] font-normal text-zinc-500">/mo</span></span>
+            <span className="text-[12px] text-zinc-500 mt-1">5/day, priority</span>
+          </a>
+        </div>
+      )}
       
       <button
         onClick={onAnalyzeAnother}
-        className="w-full py-3 text-[13px] text-zinc-500 hover:text-zinc-300 transition-colors"
+        className="w-full py-3 text-[13px] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
       >
         Maybe later
       </button>
@@ -345,7 +305,7 @@ interface AnalysisResult {
   
   // Usage info for conversion
   usage: {
-    plan: 'free' | 'creator' | 'pro';
+    plan: 'anonymous' | 'free' | 'creator' | 'pro';
     modelUsed: 'premium' | 'fast';
     analysesUsed: number;
     analysesLimit: number;
@@ -538,75 +498,21 @@ export default function AnalyzePage() {
   const [error, setError] = useState<string | null>(null);
   const [restoredFromStorage, setRestoredFromStorage] = useState(false);
 
-  // On mount, check for pending video from before auth redirect
+  // Clean up any old IndexedDB data on mount (legacy cleanup)
   useEffect(() => {
-    async function checkPendingVideo() {
-      // Only check once when signed in and no file loaded yet
-      if (!isLoaded || !isSignedIn || file || restoredFromStorage) {
-        return;
-      }
-      
-      console.log('[TokBox] Checking for pending video in IndexedDB...');
-      const data = await loadVideoFromIDB();
-      
-      if (!data) {
-        console.log('[TokBox] No pending video found');
-        return;
-      }
-      
-      console.log('[TokBox] Found pending video, restoring...', { mood: data.mood });
-      
-      setRestoredFromStorage(true);
-      setFile(data.file);
-      setPreview(URL.createObjectURL(data.file));
-      if (data.mood) {
-        setSelectedMood(data.mood as MoodId);
-      }
-      
-      // Clear from storage
-      await clearVideoFromIDB();
-      
-      // Auto-start analysis
-      console.log('[TokBox] Starting auto-analysis...');
-      setAnalyzing(true);
-      setError(null);
-      
-      const formData = new FormData();
-      formData.append('video', data.file);
-      if (data.mood) {
-        formData.append('mood', data.mood);
-      }
-
-      try {
-        const response = await fetch('/api/analyze', {
-          method: 'POST',
-          body: formData,
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Analysis failed');
-        }
-        
-        const result = await response.json();
-        setResult({ ...result, selectedMood: data.mood as MoodId });
-        console.log('[TokBox] Analysis complete!');
-      } catch (err) {
-        console.error('[TokBox] Analysis failed:', err);
-        setError(err instanceof Error ? err.message : 'Analysis failed');
-      } finally {
-        setAnalyzing(false);
-      }
-    }
-    
-    checkPendingVideo();
-  }, [isLoaded, isSignedIn, file, restoredFromStorage]);
+    clearVideoFromIDB();
+  }, []);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const videoFile = acceptedFiles[0];
     if (videoFile) {
       setFile(videoFile);
-      setPreview(URL.createObjectURL(videoFile));
+      try {
+        setPreview(URL.createObjectURL(videoFile));
+      } catch (e) {
+        console.error('Failed to create preview URL:', e);
+        setPreview(null);
+      }
       setResult(null);
       setError(null);
     }
@@ -621,22 +527,14 @@ export default function AnalyzePage() {
 
   const analyzeVideo = async () => {
     if (!file) return;
-
-    // Check if user is signed in
-    if (!isSignedIn) {
-      // Save video to IndexedDB before auth redirect
-      console.log('[TokBox] Saving video to IndexedDB before redirect...', { mood: selectedMood });
-      await saveVideoToIDB(file, selectedMood);
-      console.log('[TokBox] Saved! Redirecting to sign-in...');
+    
+    // Check localStorage for free analysis usage (client-side check)
+    const freeUsed = localStorage.getItem('tokbox_free_used');
+    if (freeUsed && !isSignedIn) {
+      // Redirect to sign-in if they've already used their free analysis
       router.push('/sign-in?redirect_url=/analyze');
       return;
     }
-
-    runAnalysis();
-  };
-
-  const runAnalysis = async () => {
-    if (!file) return;
 
     setAnalyzing(true);
     setError(null);
@@ -653,12 +551,29 @@ export default function AnalyzePage() {
         body: formData,
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const data = await response.json();
+        // Handle limit reached - redirect to sign-in or pricing
+        if (data.error === 'limit_reached') {
+          if (data.requiresSignUp) {
+            // Anonymous user needs to sign up
+            router.push('/sign-in?redirect_url=/analyze');
+          } else if (data.upgradeRequired) {
+            // Signed-in user needs to upgrade
+            router.push('/pricing');
+          }
+          setError(data.message || 'Analysis limit reached');
+          return;
+        }
         throw new Error(data.error || 'Analysis failed');
       }
 
-      const data = await response.json();
+      // Mark free analysis as used in localStorage (for client-side check)
+      if (!isSignedIn) {
+        localStorage.setItem('tokbox_free_used', 'true');
+      }
+      
       // Include the selected mood in the result
       setResult({ ...data, selectedMood });
     } catch (err) {
@@ -1073,8 +988,11 @@ export default function AnalyzePage() {
             )}
 
             {/* Conversion / Analyze Another */}
-            {result.usage?.plan === 'free' && result.usage?.isLastFreeAnalysis ? (
-              <ConversionCard onAnalyzeAnother={reset} />
+            {result.usage?.isLastFreeAnalysis ? (
+              <ConversionCard 
+                onAnalyzeAnother={reset} 
+                isAnonymous={result.usage?.plan === 'anonymous'}
+              />
             ) : (
               <>
                 {/* Usage indicator for paid users */}

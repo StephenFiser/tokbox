@@ -11,8 +11,9 @@ export async function initDb() {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS analyses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id TEXT NOT NULL,
+      user_id TEXT,
       user_email TEXT,
+      ip_address TEXT,
       mood TEXT NOT NULL,
       video_duration_seconds REAL,
       grade TEXT,
@@ -31,20 +32,27 @@ export async function initDb() {
   await db.execute(`
     CREATE INDEX IF NOT EXISTS idx_analyses_mood ON analyses(mood)
   `);
+  
+  // Index for IP lookups (anonymous users)
+  await db.execute(`
+    CREATE INDEX IF NOT EXISTS idx_analyses_ip ON analyses(ip_address)
+  `);
 }
 
 // Track a new analysis
 export async function trackAnalysis({
   userId,
   userEmail,
+  ipAddress,
   mood,
   videoDurationSeconds,
   grade,
   viralScore,
   modelUsed,
 }: {
-  userId: string;
+  userId?: string | null;
   userEmail?: string | null;
+  ipAddress?: string | null;
   mood: string;
   videoDurationSeconds?: number;
   grade?: string;
@@ -53,11 +61,20 @@ export async function trackAnalysis({
 }) {
   await db.execute({
     sql: `
-      INSERT INTO analyses (user_id, user_email, mood, video_duration_seconds, grade, viral_score, model_used)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO analyses (user_id, user_email, ip_address, mood, video_duration_seconds, grade, viral_score, model_used)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `,
-    args: [userId, userEmail || null, mood, videoDurationSeconds || null, grade || null, viralScore || null, modelUsed],
+    args: [userId || null, userEmail || null, ipAddress || null, mood, videoDurationSeconds || null, grade || null, viralScore || null, modelUsed],
   });
+}
+
+// Check if IP has already used free analysis
+export async function hasIpUsedFreeAnalysis(ipAddress: string): Promise<boolean> {
+  const result = await db.execute({
+    sql: `SELECT COUNT(*) as count FROM analyses WHERE ip_address = ? AND user_id IS NULL`,
+    args: [ipAddress],
+  });
+  return Number(result.rows[0]?.count || 0) > 0;
 }
 
 // Get user's analysis count for current month
