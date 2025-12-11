@@ -57,19 +57,41 @@ interface VideoAnalysisResult {
   numFrames: number;
 }
 
-async function analyzeVideoWithService(videoBlob: Blob, filename: string = 'video.mp4'): Promise<VideoAnalysisResult | null> {
+async function uploadVideoToS3(videoBuffer: Buffer, filename: string): Promise<string> {
+  const s3Key = `tokbox/videos/${Date.now()}_${filename}`;
+  
+  await s3.send(new PutObjectCommand({
+    Bucket: S3_BUCKET,
+    Key: s3Key,
+    Body: videoBuffer,
+    ContentType: filename.endsWith('.mov') ? 'video/quicktime' : 'video/mp4',
+  }));
+  
+  // Return the S3 URL
+  return `https://${S3_BUCKET}.s3.${process.env.AWS_REGION || 'us-east-2'}.amazonaws.com/${s3Key}`;
+}
+
+async function analyzeVideoWithService(videoBuffer: Buffer, filename: string = 'video.mp4'): Promise<VideoAnalysisResult | null> {
   try {
+    // Upload to S3 first for reliable transfer
+    console.log(`Uploading video to S3: ${filename} (${videoBuffer.length} bytes, ${(videoBuffer.length / (1024*1024)).toFixed(2)} MB)`);
+    const videoUrl = await uploadVideoToS3(videoBuffer, filename);
+    console.log(`Video uploaded to S3: ${videoUrl}`);
+    
+    // Send URL to embedding service instead of file
     const formData = new FormData();
-    formData.append('video', videoBlob, filename);
+    formData.append('video_url', videoUrl);
     formData.append('num_frames', '10');
     
+    console.log('Calling embedding service with S3 URL...');
     const response = await fetch(`${EMBEDDING_SERVICE_URL}/analyze-video`, {
       method: 'POST',
       body: formData,
     });
     
     if (!response.ok) {
-      console.error('Embedding service error:', await response.text());
+      const errorText = await response.text();
+      console.error('Embedding service error:', errorText);
       return null;
     }
     
@@ -1295,14 +1317,14 @@ export async function POST(request: NextRequest) {
     const analysisId = generateId();
     const moodStrategy = mood ? MOOD_STRATEGIES[mood] : null;
     const videoBuffer = Buffer.from(await videoFile.arrayBuffer());
-    const videoBlob = new Blob([videoBuffer], { type: 'video/mp4' });
+    const originalFilename = videoFile.name || 'video.mp4';
     
+    console.log(`Video file received: ${originalFilename}, size: ${videoFile.size} bytes, buffer size: ${videoBuffer.length} bytes`);
     console.log(`Starting analysis for user ${userId} (${userPlan} plan, ${modelTier} tier)`);
     
-    // Call embedding service for frames (pass original filename for format detection)
-    const originalFilename = videoFile.name || 'video.mp4';
-    console.log(`Extracting frames from ${originalFilename}...`);
-    const videoAnalysis = await analyzeVideoWithService(videoBlob, originalFilename);
+    // Call embedding service (uploads to S3 first for reliable transfer)
+    console.log(`Processing video: ${originalFilename}...`);
+    const videoAnalysis = await analyzeVideoWithService(videoBuffer, originalFilename);
     
     if (!videoAnalysis || videoAnalysis.frames.length === 0) {
       return NextResponse.json({ 
