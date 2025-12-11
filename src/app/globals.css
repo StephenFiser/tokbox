@@ -168,9 +168,8 @@ body {
   padding-top: env(safe-area-inset-top);
 }
 
-/* Touch targets & cursor */
+/* Cursor for interactive elements */
 button, a, [role="button"] {
-  min-height: 44px;
   cursor: pointer;
 }
 
@@ -242,6 +241,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ===== Clerk Component Overrides ===== */
+
+/* Ensure Clerk wrapper components don't break flex layouts */
+[data-clerk-component] {
+  display: contents;
+}
 
 /* Main card container */
 .cl-card {

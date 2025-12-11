@@ -1,8 +1,79 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useDropzone } from 'react-dropzone';
+import { useUser } from '@clerk/nextjs';
 import { Navbar } from '@/components/Navbar';
+
+// IndexedDB helpers to persist video across auth redirect
+const DB_NAME = 'tokbox-temp';
+const STORE_NAME = 'pending-video';
+
+async function saveVideoToIDB(file: File, mood: string | null): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onerror = () => reject(request.error);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.put({ file, mood, timestamp: Date.now() }, 'pending');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    };
+  });
+}
+
+async function loadVideoFromIDB(): Promise<{ file: File; mood: string | null } | null> {
+  return new Promise((resolve) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onerror = () => resolve(null);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const getRequest = store.get('pending');
+      getRequest.onsuccess = () => {
+        const data = getRequest.result;
+        // Only use if less than 10 minutes old
+        if (data && Date.now() - data.timestamp < 10 * 60 * 1000) {
+          resolve({ file: data.file, mood: data.mood });
+        } else {
+          resolve(null);
+        }
+      };
+      getRequest.onerror = () => resolve(null);
+    };
+  });
+}
+
+async function clearVideoFromIDB(): Promise<void> {
+  return new Promise((resolve) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onerror = () => resolve();
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.delete('pending');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    };
+  });
+}
 import {
   ArrowUpTrayIcon,
   ArrowPathIcon,
@@ -265,12 +336,79 @@ function HookTabs({ hooks, recommendedType }: { hooks: HookSet; recommendedType:
 }
 
 export default function AnalyzePage() {
+  const router = useRouter();
+  const { isSignedIn, isLoaded } = useUser();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedMood, setSelectedMood] = useState<MoodId | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [restoredFromStorage, setRestoredFromStorage] = useState(false);
+
+  // On mount, check for pending video from before auth redirect
+  useEffect(() => {
+    async function checkPendingVideo() {
+      // Only check once when signed in and no file loaded yet
+      if (!isLoaded || !isSignedIn || file || restoredFromStorage) {
+        return;
+      }
+      
+      console.log('[TokBox] Checking for pending video in IndexedDB...');
+      const data = await loadVideoFromIDB();
+      
+      if (!data) {
+        console.log('[TokBox] No pending video found');
+        return;
+      }
+      
+      console.log('[TokBox] Found pending video, restoring...', { mood: data.mood });
+      
+      setRestoredFromStorage(true);
+      setFile(data.file);
+      setPreview(URL.createObjectURL(data.file));
+      if (data.mood) {
+        setSelectedMood(data.mood as MoodId);
+      }
+      
+      // Clear from storage
+      await clearVideoFromIDB();
+      
+      // Auto-start analysis
+      console.log('[TokBox] Starting auto-analysis...');
+      setAnalyzing(true);
+      setError(null);
+      
+      const formData = new FormData();
+      formData.append('video', data.file);
+      if (data.mood) {
+        formData.append('mood', data.mood);
+      }
+
+      try {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Analysis failed');
+        }
+        
+        const result = await response.json();
+        setResult({ ...result, selectedMood: data.mood as MoodId });
+        console.log('[TokBox] Analysis complete!');
+      } catch (err) {
+        console.error('[TokBox] Analysis failed:', err);
+        setError(err instanceof Error ? err.message : 'Analysis failed');
+      } finally {
+        setAnalyzing(false);
+      }
+    }
+    
+    checkPendingVideo();
+  }, [isLoaded, isSignedIn, file, restoredFromStorage]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const videoFile = acceptedFiles[0];
@@ -290,6 +428,22 @@ export default function AnalyzePage() {
   });
 
   const analyzeVideo = async () => {
+    if (!file) return;
+
+    // Check if user is signed in
+    if (!isSignedIn) {
+      // Save video to IndexedDB before auth redirect
+      console.log('[TokBox] Saving video to IndexedDB before redirect...', { mood: selectedMood });
+      await saveVideoToIDB(file, selectedMood);
+      console.log('[TokBox] Saved! Redirecting to sign-in...');
+      router.push('/sign-in?redirect_url=/analyze');
+      return;
+    }
+
+    runAnalysis();
+  };
+
+  const runAnalysis = async () => {
     if (!file) return;
 
     setAnalyzing(true);
@@ -328,7 +482,52 @@ export default function AnalyzePage() {
     setSelectedMood(null);
     setResult(null);
     setError(null);
+    clearVideoFromIDB();
   };
+
+  // Show fullscreen loading when analyzing
+  if (analyzing) {
+    return (
+      <div className="min-h-screen bg-[#09090b] flex flex-col">
+        {/* Ambient background */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/[0.08] rounded-full blur-[120px] animate-pulse-soft" />
+        </div>
+        
+        <Navbar sticky showPricing={false} />
+        
+        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
+          {/* Animated loader */}
+          <div className="relative mb-8">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-purple-500/30">
+              <ArrowPathIcon className="w-8 h-8 text-white animate-spin" />
+            </div>
+          </div>
+          
+          <h2 className="text-xl font-semibold mb-3">Analyzing your video</h2>
+          <p className="text-zinc-400 text-center max-w-xs mb-8">
+            Our AI is reviewing your content for viral potential, hook strength, and visual quality
+          </p>
+          
+          {/* Progress steps */}
+          <div className="space-y-3 text-[14px]">
+            <div className="flex items-center gap-3 text-zinc-400">
+              <CheckIcon className="w-4 h-4 text-emerald-400" />
+              <span>Video uploaded</span>
+            </div>
+            <div className="flex items-center gap-3 text-zinc-400">
+              <CheckIcon className="w-4 h-4 text-emerald-400" />
+              <span>Extracting key frames</span>
+            </div>
+            <div className="flex items-center gap-3 text-white">
+              <ArrowPathIcon className="w-4 h-4 animate-spin text-purple-400" />
+              <span>AI analysis in progress...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#09090b]">

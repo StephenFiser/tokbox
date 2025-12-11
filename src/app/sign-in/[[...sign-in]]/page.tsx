@@ -1,9 +1,13 @@
 'use client';
 
 import { SignIn } from '@clerk/nextjs';
+import { useSearchParams } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 
 export default function SignInPage() {
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect_url') || '/analyze';
+
   return (
     <div className="min-h-screen bg-[#09090b] flex flex-col">
       {/* Ambient background */}
@@ -16,6 +20,8 @@ export default function SignInPage() {
       {/* Sign In */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-6 pb-20 pt-8">
         <SignIn 
+          forceRedirectUrl={redirectUrl}
+          signUpForceRedirectUrl={redirectUrl}
           appearance={{
             layout: {
               socialButtonsPlacement: 'top',
