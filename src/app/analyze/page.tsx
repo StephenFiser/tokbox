@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import Link from 'next/link';
+import { Navbar } from '@/components/Navbar';
 import {
   ArrowUpTrayIcon,
   ArrowPathIcon,
@@ -34,7 +34,7 @@ import {
   ArrowRightIcon,
   ChatBubbleLeftIcon,
 } from '@heroicons/react/24/outline';
-import { SparklesIcon as SparklesSolid, CheckCircleIcon } from '@heroicons/react/24/solid';
+import { CheckCircleIcon, SparklesIcon as SparklesSolid } from '@heroicons/react/24/solid';
 import { HookSet, HookType, HOOK_TYPE_INFO } from '@/lib/hooks';
 
 // Mood options for creators to select
@@ -338,24 +338,20 @@ export default function AnalyzePage() {
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/[0.04]">
-        <div className="max-w-lg mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 border border-white/10">
-              <SparklesSolid className="w-4.5 h-4.5 text-white" />
-            </div>
-            <span className="font-semibold tracking-tight">TokBox</span>
-          </Link>
-          {result && (
+      <Navbar 
+        sticky
+        showPricing={false}
+        rightContent={
+          result && (
             <button
               onClick={reset}
-              className="w-10 h-10 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] flex items-center justify-center transition-all duration-200"
+              className="w-10 h-10 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] flex items-center justify-center transition-all duration-200 cursor-pointer"
             >
               <XMarkIcon className="w-5 h-5 text-zinc-400" />
             </button>
-          )}
-        </div>
-      </header>
+          )
+        }
+      />
 
       <main className="relative z-10 max-w-lg mx-auto px-6 py-10 safe-bottom">
         {/* Upload Section */}

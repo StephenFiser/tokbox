@@ -3,11 +3,11 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 // Routes that don't require authentication
 const isPublicRoute = createRouteMatcher([
   '/',
-  '/analyze',
   '/pricing',
   '/privacy',
   '/terms',
-  '/api/analyze', // Allow first free analysis without auth
+  '/sign-in(.*)',
+  '/sign-up(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

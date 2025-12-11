@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Navbar } from '@/components/Navbar';
 import {
   SparklesIcon,
   ArrowRightIcon,
@@ -23,23 +24,7 @@ export default function LandingPage() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-gradient-radial from-pink-500/[0.04] to-transparent rounded-full blur-3xl" />
       </div>
 
-      {/* Header */}
-      <header className="relative z-10 px-6 py-5">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/25 border border-white/10">
-              <SparklesIcon className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-[17px] font-semibold tracking-tight">TokBox</span>
-          </div>
-          <Link
-            href="/pricing"
-            className="text-[15px] text-zinc-400 hover:text-white transition-colors duration-200"
-          >
-            Pricing
-          </Link>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero */}
       <section className="relative z-10 px-6 pt-16 pb-20 sm:pt-24 sm:pb-28">

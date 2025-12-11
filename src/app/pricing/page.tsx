@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Navbar } from '@/components/Navbar';
 import { CheckIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 
@@ -83,22 +84,16 @@ export default function PricingPage() {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 px-6 py-5">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 border border-white/10">
-              <SparklesIcon className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-[17px] font-semibold tracking-tight">TokBox</span>
-          </Link>
+      <Navbar 
+        rightContent={
           <Link
             href="/analyze"
             className="px-4 py-2.5 text-[14px] font-medium text-white bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] rounded-xl transition-all duration-200"
           >
             Try Free
           </Link>
-        </div>
-      </header>
+        }
+      />
 
       <main className="relative z-10 max-w-3xl mx-auto px-6 py-20 safe-bottom">
         {/* Title */}
