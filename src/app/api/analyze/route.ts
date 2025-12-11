@@ -72,14 +72,9 @@ async function uploadVideoToS3(videoBuffer: Buffer, filename: string): Promise<s
   return `https://${S3_BUCKET}.s3.${process.env.AWS_REGION || 'us-east-2'}.amazonaws.com/${s3Key}`;
 }
 
-async function analyzeVideoWithService(videoBuffer: Buffer, filename: string = 'video.mp4'): Promise<VideoAnalysisResult | null> {
+// Call embedding service with S3 URL (video already uploaded)
+async function analyzeVideoWithS3Url(videoUrl: string): Promise<VideoAnalysisResult | null> {
   try {
-    // Upload to S3 first for reliable transfer
-    console.log(`Uploading video to S3: ${filename} (${videoBuffer.length} bytes, ${(videoBuffer.length / (1024*1024)).toFixed(2)} MB)`);
-    const videoUrl = await uploadVideoToS3(videoBuffer, filename);
-    console.log(`Video uploaded to S3: ${videoUrl}`);
-    
-    // Send URL to embedding service instead of file
     const formData = new FormData();
     formData.append('video_url', videoUrl);
     formData.append('num_frames', '10');
@@ -1327,25 +1322,46 @@ export async function POST(request: NextRequest) {
       modelTier = 'fast';
     }
     
-    const formData = await request.formData();
-    const videoFile = formData.get('video') as File;
-    const mood = formData.get('mood') as string | null;
+    // Parse request body - accepts JSON with videoUrl OR form data with file
+    let videoUrl: string | null = null;
+    let mood: string | null = null;
     
-    if (!videoFile) {
-      return NextResponse.json({ error: 'No video file provided' }, { status: 400 });
+    const contentType = request.headers.get('content-type') || '';
+    
+    if (contentType.includes('application/json')) {
+      // New flow: video already uploaded to S3, we receive the URL
+      const body = await request.json();
+      videoUrl = body.videoUrl;
+      mood = body.mood;
+      
+      if (!videoUrl) {
+        return NextResponse.json({ error: 'No videoUrl provided' }, { status: 400 });
+      }
+    } else {
+      // Legacy flow: file upload (will hit Vercel limits for large files)
+      const formData = await request.formData();
+      const videoFile = formData.get('video') as File | null;
+      mood = formData.get('mood') as string | null;
+      
+      if (!videoFile) {
+        return NextResponse.json({ error: 'No video file provided' }, { status: 400 });
+      }
+      
+      // Upload to S3 first
+      const videoBuffer = Buffer.from(await videoFile.arrayBuffer());
+      const originalFilename = videoFile.name || 'video.mp4';
+      console.log(`Legacy upload: ${originalFilename}, size: ${videoFile.size} bytes`);
+      videoUrl = await uploadVideoToS3(videoBuffer, originalFilename);
     }
     
     const analysisId = generateId();
     const moodStrategy = mood ? MOOD_STRATEGIES[mood] : null;
-    const videoBuffer = Buffer.from(await videoFile.arrayBuffer());
-    const originalFilename = videoFile.name || 'video.mp4';
     
-    console.log(`Video file received: ${originalFilename}, size: ${videoFile.size} bytes, buffer size: ${videoBuffer.length} bytes`);
     console.log(`Starting analysis for ${userId || `anonymous (${clientIp})`} (${userPlan} plan, ${modelTier} tier)`);
+    console.log(`Video URL: ${videoUrl.substring(0, 80)}...`);
     
-    // Call embedding service (uploads to S3 first for reliable transfer)
-    console.log(`Processing video: ${originalFilename}...`);
-    const videoAnalysis = await analyzeVideoWithService(videoBuffer, originalFilename);
+    // Call embedding service with S3 URL
+    const videoAnalysis = await analyzeVideoWithS3Url(videoUrl);
     
     if (!videoAnalysis || videoAnalysis.frames.length === 0) {
       return NextResponse.json({ 

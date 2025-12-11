@@ -540,15 +540,47 @@ export default function AnalyzePage() {
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('video', file);
-      if (selectedMood) {
-        formData.append('mood', selectedMood);
+      // Step 1: Get presigned upload URL from our API
+      console.log('Getting presigned upload URL...');
+      const uploadUrlResponse = await fetch('/api/get-upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type || 'video/mp4',
+        }),
+      });
+      
+      if (!uploadUrlResponse.ok) {
+        throw new Error('Failed to get upload URL');
       }
-
+      
+      const { uploadUrl, videoUrl } = await uploadUrlResponse.json();
+      
+      // Step 2: Upload video directly to S3 (bypasses Vercel size limits)
+      console.log('Uploading video to S3...', file.size, 'bytes');
+      const s3Response = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type || 'video/mp4',
+        },
+        body: file,
+      });
+      
+      if (!s3Response.ok) {
+        throw new Error('Failed to upload video to storage');
+      }
+      
+      console.log('Video uploaded, starting analysis...');
+      
+      // Step 3: Call analyze API with the S3 URL
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          videoUrl,
+          mood: selectedMood,
+        }),
       });
 
       const data = await response.json();
@@ -577,6 +609,7 @@ export default function AnalyzePage() {
       // Include the selected mood in the result
       setResult({ ...data, selectedMood });
     } catch (err) {
+      console.error('Analysis error:', err);
       setError(err instanceof Error ? err.message : 'Analysis failed');
     } finally {
       setAnalyzing(false);
