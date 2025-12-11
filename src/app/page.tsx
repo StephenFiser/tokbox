@@ -1,9 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Navbar } from '@/components/Navbar';
+import { Navbar, TokBoxLogo } from '@/components/Navbar';
 import {
-  SparklesIcon,
   ArrowRightIcon,
   CheckIcon,
 } from '@heroicons/react/24/solid';
@@ -58,7 +57,7 @@ export default function LandingPage() {
 
           <p className="mt-6 text-[14px] text-zinc-500 flex items-center justify-center gap-2">
             <CheckIcon className="w-4 h-4 text-emerald-400" />
-            First analysis free · No signup required
+            First analysis free · Takes 30 seconds
           </p>
         </div>
       </section>
@@ -345,9 +344,7 @@ export default function LandingPage() {
       <footer className="relative z-10 px-6 py-8 border-t border-white/[0.04] safe-bottom">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2.5 text-zinc-500">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-              <SparklesIcon className="w-3.5 h-3.5 text-white" />
-            </div>
+            <TokBoxLogo className="w-7 h-7" />
             <span className="text-[14px] font-medium">TokBox</span>
           </div>
           <div className="flex gap-6 text-[14px] text-zinc-500">
