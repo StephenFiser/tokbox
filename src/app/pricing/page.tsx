@@ -1,60 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { Navbar } from '@/components/Navbar';
-import { CheckIcon, SparklesIcon } from '@heroicons/react/24/solid';
+import { Navbar, TokBoxLogo } from '@/components/Navbar';
+import { CheckIcon } from '@heroicons/react/24/solid';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
-
-const PLANS = [
-  {
-    name: 'Free',
-    price: '$0',
-    period: '',
-    description: 'Try it out',
-    features: [
-      '1 video analysis',
-      'All 3 hook styles',
-      'Visual feedback',
-      'Caption ideas',
-    ],
-    cta: 'Start Free',
-    href: '/analyze',
-    featured: false,
-  },
-  {
-    name: 'Creator',
-    price: '$9',
-    period: '/mo',
-    description: 'For active creators',
-    features: [
-      '20 analyses per month',
-      'Priority processing',
-      'Analysis history',
-      'Save favorites',
-      'Email support',
-    ],
-    cta: 'Get Started',
-    href: '/analyze',
-    featured: true,
-    badge: 'Most Popular',
-  },
-  {
-    name: 'Pro',
-    price: '$19',
-    period: '/mo',
-    description: 'Unlimited everything',
-    features: [
-      'Unlimited analyses',
-      'Everything in Creator',
-      'Bulk upload (soon)',
-      'API access (soon)',
-      'Priority support',
-    ],
-    cta: 'Get Started',
-    href: '/analyze',
-    featured: false,
-  },
-];
+import { PricingTable } from '@clerk/nextjs';
 
 const FAQS = [
   {
@@ -106,56 +56,52 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {/* Plans */}
-        <div className="grid gap-5 sm:grid-cols-3 mb-24">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative p-6 rounded-3xl border transition-all duration-300 ${
-                plan.featured
-                  ? 'bg-gradient-to-b from-purple-500/[0.1] to-purple-500/[0.03] border-purple-500/25 hover:border-purple-500/35 shadow-lg shadow-purple-500/5'
-                  : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12]'
-              }`}
-            >
-              {plan.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-purple-500 rounded-full text-[11px] font-semibold text-white shadow-lg">
-                  {plan.badge}
-                </div>
-              )}
-
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-1">{plan.name}</h3>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-3xl font-semibold">{plan.price}</span>
-                  <span className="text-zinc-500 text-[14px]">{plan.period}</span>
-                </div>
-                <p className="text-[13px] text-zinc-500">{plan.description}</p>
+        {/* Free Tier Card */}
+        <div className="mb-8 max-w-sm mx-auto">
+          <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-1">Free</h3>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-3xl font-semibold">$0</span>
               </div>
-
-              <ul className="space-y-3 mb-6">
-                {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3 text-[14px]">
-                    <CheckIcon className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                      plan.featured ? 'text-purple-400' : 'text-emerald-400'
-                    }`} />
-                    <span className="text-zinc-300">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href={plan.href}
-                className={`flex items-center justify-center gap-2 w-full py-3 text-center text-[14px] font-semibold rounded-xl transition-all duration-200 ${
-                  plan.featured
-                    ? 'btn-premium text-white'
-                    : 'bg-white/[0.04] hover:bg-white/[0.08] text-white border border-white/[0.06]'
-                }`}
-              >
-                {plan.cta}
-                <ArrowRightIcon className="w-4 h-4" />
-              </Link>
+              <p className="text-[13px] text-zinc-500">Try it out</p>
             </div>
-          ))}
+
+            <ul className="space-y-3 mb-6">
+              {['1 video analysis', 'All 3 hook styles', 'Visual feedback', 'Caption ideas'].map((feature, i) => (
+                <li key={i} className="flex items-start gap-3 text-[14px]">
+                  <CheckIcon className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-400" />
+                  <span className="text-zinc-300">{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              href="/analyze"
+              className="flex items-center justify-center gap-2 w-full py-3 text-center text-[14px] font-semibold rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white border border-white/[0.06] transition-all duration-200"
+            >
+              Start Free
+              <ArrowRightIcon className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+        
+        {/* Clerk Pricing Table for Paid Plans */}
+        <div className="mb-24">
+          <PricingTable 
+            appearance={{
+              variables: {
+                colorPrimary: '#a855f7',
+                colorBackground: '#18181b',
+                colorText: '#fafafa',
+                colorTextSecondary: '#a1a1aa',
+              },
+              elements: {
+                card: 'bg-zinc-900 border-zinc-800 rounded-3xl',
+                button: 'btn-premium',
+              },
+            }}
+          />
         </div>
 
         {/* FAQ */}
@@ -193,9 +139,7 @@ export default function PricingPage() {
       <footer className="relative z-10 px-6 py-8 border-t border-white/[0.04] safe-bottom">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2.5 text-zinc-500">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-              <SparklesIcon className="w-3.5 h-3.5 text-white" />
-            </div>
+            <TokBoxLogo className="w-7 h-7" />
             <span className="text-[14px] font-medium">TokBox</span>
           </div>
           <div className="flex gap-6 text-[14px] text-zinc-500">

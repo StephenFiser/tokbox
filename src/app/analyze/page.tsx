@@ -132,6 +132,83 @@ const MOOD_OPTIONS = [
 
 type MoodId = typeof MOOD_OPTIONS[number]['id'];
 
+// Conversion card for free users
+function ConversionCard({ onAnalyzeAnother }: { onAnalyzeAnother: () => void }) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-purple-500/20 bg-gradient-to-b from-purple-500/[0.08] to-transparent p-6 space-y-5">
+      {/* Glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-transparent to-pink-500/5" />
+      
+      <div className="relative space-y-3">
+        <div className="flex items-center gap-2">
+          <SparklesSolid className="w-5 h-5 text-purple-400" />
+          <span className="text-[15px] font-semibold text-white">Ready for your next video?</span>
+        </div>
+        <p className="text-[14px] text-zinc-400 leading-relaxed">
+          You&apos;ve used your free analysis. Creators who analyze before posting see 2-3x better engagement.
+        </p>
+      </div>
+      
+      <div className="relative grid grid-cols-2 gap-3">
+        {/* Creator Plan */}
+        <a 
+          href="/pricing"
+          className="group flex flex-col p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-purple-500/30 hover:bg-white/[0.05] transition-all duration-200"
+        >
+          <span className="text-[13px] text-zinc-500 mb-1">Creator</span>
+          <span className="text-[20px] font-bold text-white">$9<span className="text-[13px] font-normal text-zinc-500">/mo</span></span>
+          <span className="text-[12px] text-zinc-500 mt-1">30 videos/month</span>
+        </a>
+        
+        {/* Pro Plan */}
+        <a 
+          href="/pricing"
+          className="group flex flex-col p-4 rounded-xl bg-gradient-to-b from-purple-500/10 to-transparent border border-purple-500/20 hover:border-purple-500/40 transition-all duration-200"
+        >
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-[13px] text-purple-400">Pro</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">POPULAR</span>
+          </div>
+          <span className="text-[20px] font-bold text-white">$19<span className="text-[13px] font-normal text-zinc-500">/mo</span></span>
+          <span className="text-[12px] text-zinc-500 mt-1">5/day, priority</span>
+        </a>
+      </div>
+      
+      <button
+        onClick={onAnalyzeAnother}
+        className="w-full py-3 text-[13px] text-zinc-500 hover:text-zinc-300 transition-colors"
+      >
+        Maybe later
+      </button>
+    </div>
+  );
+}
+
+// Upgrade prompt for when limit is reached
+function UpgradePrompt({ plan, usage }: { plan: string; usage: { analysesUsed: number; analysesLimit: number } }) {
+  const message = plan === 'creator' 
+    ? `You've used ${usage.analysesUsed} of ${usage.analysesLimit} analyses this month.`
+    : `You've used ${usage.analysesUsed} of ${usage.analysesLimit} analyses today.`;
+  
+  return (
+    <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.05] p-5 space-y-3">
+      <div className="flex items-center gap-2">
+        <ChartBarIcon className="w-5 h-5 text-amber-400" />
+        <span className="text-[14px] font-medium text-amber-200">{message}</span>
+      </div>
+      {plan === 'creator' && (
+        <a 
+          href="/pricing"
+          className="inline-flex items-center gap-2 text-[13px] text-purple-400 hover:text-purple-300 transition-colors"
+        >
+          Upgrade to Pro for 5/day
+          <ArrowRightIcon className="w-3.5 h-3.5" />
+        </a>
+      )}
+    </div>
+  );
+}
+
 interface AnalysisResult {
   id: string;
   grade: string;
@@ -169,6 +246,15 @@ interface AnalysisResult {
     whatMatters: string[];
     advancedTips: string[];
   } | null;
+  
+  // Usage info for conversion
+  usage: {
+    plan: 'free' | 'creator' | 'pro';
+    modelUsed: 'premium' | 'fast';
+    analysesUsed: number;
+    analysesLimit: number;
+    isLastFreeAnalysis: boolean;
+  };
 }
 
 function CopyButton({ text, size = 'md' }: { text: string; size?: 'sm' | 'md' }) {
@@ -898,17 +984,31 @@ export default function AnalyzePage() {
               </div>
             )}
 
-            {/* Analyze Another */}
-            <button
-              onClick={reset}
-              className="w-full py-4 px-6 font-semibold text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-2xl transition-all duration-200 text-[15px]"
-            >
-              Analyze Another Video
-            </button>
+            {/* Conversion / Analyze Another */}
+            {result.usage?.plan === 'free' && result.usage?.isLastFreeAnalysis ? (
+              <ConversionCard onAnalyzeAnother={reset} />
+            ) : (
+              <>
+                {/* Usage indicator for paid users */}
+                {result.usage && result.usage.plan !== 'free' && (
+                  <UpgradePrompt plan={result.usage.plan} usage={result.usage} />
+                )}
+                
+                <button
+                  onClick={reset}
+                  className="w-full py-4 px-6 font-semibold text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-2xl transition-all duration-200 text-[15px] cursor-pointer"
+                >
+                  Analyze Another Video
+                </button>
+              </>
+            )}
 
             {/* Footer info */}
             <p className="text-center text-[13px] text-zinc-600">
               Analyzed in {(result.processingTimeMs / 1000).toFixed(1)}s
+              {result.usage?.modelUsed === 'fast' && (
+                <span className="ml-2 text-zinc-500">• Fast mode</span>
+              )}
             </p>
           </div>
         )}

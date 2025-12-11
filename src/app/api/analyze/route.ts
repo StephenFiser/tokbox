@@ -2,14 +2,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import {
   getHookGenerationPrompt,
   parseHookResponse,
 } from '@/lib/hooks';
+import {
+  db,
+  initDb,
+  trackAnalysis,
+  getTotalAnalysisCount,
+  getMonthlyAnalysisCount,
+  getDailyAnalysisCount,
+  getMonthlyPremiumCount,
+  USAGE_LIMITS,
+  PLAN_IDS,
+} from '@/lib/db';
 
 // Route segment config for App Router
 export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
+
+// Model types for switching between premium and fast
+type ModelTier = 'premium' | 'fast';
+
+// Get the appropriate Claude model based on tier
+function getClaudeModel(tier: ModelTier): string {
+  return tier === 'premium' ? 'claude-sonnet-4-20250514' : 'claude-3-5-haiku-20241022';
+}
 
 // Initialize clients
 const s3 = new S3Client({
@@ -105,8 +125,8 @@ function calculateGrade(scores: { hook: number; visual: number; pacing: number }
   return { grade, color, potential };
 }
 
-async function analyzeVideoComprehensive(frameUrls: string[], moodKey: string | null) {
-  // Use Claude for the comprehensive analysis
+async function analyzeVideoComprehensive(frameUrls: string[], moodKey: string | null, modelTier: ModelTier = 'premium') {
+  // Use Claude for the comprehensive analysis (model depends on tier)
   const imageContents = await Promise.all(
     frameUrls.slice(0, 5).map(async (url) => {
       const response = await fetch(url);
@@ -163,7 +183,7 @@ Your feedback should sound like it's coming from someone who DEEPLY UNDERSTANDS 
   }
   
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: getClaudeModel(modelTier),
     max_tokens: 3000,
     messages: [
       {
@@ -256,7 +276,8 @@ async function generateHooksForContent(
   existingText: string | null,
   intent: string | null,
   isTrend: boolean,
-  moodKey: string | null
+  moodKey: string | null,
+  modelTier: ModelTier = 'premium'
 ) {
   const imageContents = await Promise.all(
     frameUrls.slice(0, 3).map(async (url) => {
@@ -323,7 +344,7 @@ Your hooks MUST match ${strategy.name} energy. ${
   }
   
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: getClaudeModel(modelTier),
     max_tokens: 1500,
     temperature: 0.9, // Higher temperature for more creative variety
     messages: [
@@ -1202,6 +1223,67 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
   
   try {
+    // Initialize database tables if needed
+    await initDb();
+    
+    // Get authenticated user
+    const { userId, has } = await auth();
+    const user = await currentUser();
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    // Determine user's plan
+    const hasPro = has?.({ plan: 'pro' }) || false;
+    const hasCreator = has?.({ plan: 'creator' }) || false;
+    const userPlan = hasPro ? 'pro' : hasCreator ? 'creator' : 'free';
+    
+    // Check usage limits
+    const totalCount = await getTotalAnalysisCount(userId);
+    const monthlyCount = await getMonthlyAnalysisCount(userId);
+    const dailyCount = await getDailyAnalysisCount(userId);
+    const premiumCount = await getMonthlyPremiumCount(userId);
+    
+    // Enforce limits based on plan
+    if (userPlan === 'free' && totalCount >= USAGE_LIMITS.free.totalAnalyses) {
+      return NextResponse.json({ 
+        error: 'limit_reached',
+        message: 'You\'ve used your free analysis. Upgrade to continue!',
+        upgradeRequired: true,
+        currentPlan: 'free',
+        usage: { total: totalCount, limit: USAGE_LIMITS.free.totalAnalyses }
+      }, { status: 403 });
+    }
+    
+    if (userPlan === 'creator' && monthlyCount >= USAGE_LIMITS.creator.monthlyAnalyses) {
+      return NextResponse.json({ 
+        error: 'limit_reached',
+        message: 'You\'ve reached your 30 analyses this month. Upgrade to Pro for more!',
+        upgradeRequired: true,
+        currentPlan: 'creator',
+        usage: { monthly: monthlyCount, limit: USAGE_LIMITS.creator.monthlyAnalyses }
+      }, { status: 403 });
+    }
+    
+    if (userPlan === 'pro' && dailyCount >= USAGE_LIMITS.pro.dailyAnalyses) {
+      return NextResponse.json({ 
+        error: 'limit_reached',
+        message: 'You\'ve reached your 5 analyses for today. Come back tomorrow!',
+        upgradeRequired: false,
+        currentPlan: 'pro',
+        usage: { daily: dailyCount, limit: USAGE_LIMITS.pro.dailyAnalyses }
+      }, { status: 403 });
+    }
+    
+    // Determine model tier based on premium usage
+    let modelTier: ModelTier = 'premium';
+    if (userPlan === 'creator' && premiumCount >= USAGE_LIMITS.creator.premiumAnalyses) {
+      modelTier = 'fast';
+    } else if (userPlan === 'pro' && premiumCount >= USAGE_LIMITS.pro.premiumAnalyses) {
+      modelTier = 'fast';
+    }
+    
     const formData = await request.formData();
     const videoFile = formData.get('video') as File;
     const mood = formData.get('mood') as string | null;
@@ -1214,6 +1296,8 @@ export async function POST(request: NextRequest) {
     const moodStrategy = mood ? MOOD_STRATEGIES[mood] : null;
     const videoBuffer = Buffer.from(await videoFile.arrayBuffer());
     const videoBlob = new Blob([videoBuffer], { type: 'video/mp4' });
+    
+    console.log(`Starting analysis for user ${userId} (${userPlan} plan, ${modelTier} tier)`);
     
     // Call embedding service for frames
     console.log('Extracting frames...');
@@ -1238,8 +1322,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Comprehensive analysis with mood-specific strategy
-    console.log('Analyzing video...');
-    const analysis = await analyzeVideoComprehensive(frameUrls, mood);
+    console.log(`Analyzing video (${modelTier} model)...`);
+    const analysis = await analyzeVideoComprehensive(frameUrls, mood, modelTier);
     
     if (!analysis) {
       return NextResponse.json({ 
@@ -1253,14 +1337,15 @@ export async function POST(request: NextRequest) {
     const isTrend = analysis.is_trend_format || false;
     
     // Generate hooks specific to this content with mood strategy
-    console.log('Generating hooks...');
+    console.log(`Generating hooks (${modelTier} model)...`);
     const { hookSet, recommendedType, existingTextAssessment, whyThisType } = await generateHooksForContent(
       frameUrls, 
       contentDescription,
       existingText,
       intent,
       isTrend,
-      mood
+      mood,
+      modelTier
     );
     
     // Generate captions with mood strategy
@@ -1275,8 +1360,19 @@ export async function POST(request: NextRequest) {
     };
     const { grade, color, potential } = calculateGrade(scores);
     
+    // Track the analysis for usage limits and leads
+    await trackAnalysis({
+      userId,
+      userEmail: user?.emailAddresses?.[0]?.emailAddress || null,
+      mood: mood || 'unspecified',
+      videoDurationSeconds: videoAnalysis.duration || undefined,
+      grade,
+      viralScore: potential,
+      modelUsed: modelTier,
+    });
+    
     const processingTime = Date.now() - startTime;
-    console.log(`Analysis complete in ${processingTime}ms`);
+    console.log(`Analysis complete in ${processingTime}ms for ${userId} (${mood || 'no mood'})`);
     
     return NextResponse.json({
       id: analysisId,
@@ -1339,6 +1435,19 @@ export async function POST(request: NextRequest) {
         whatMatters: moodStrategy.whatMatters.slice(0, 3),
         advancedTips: moodStrategy.advancedTips.slice(0, 2),
       } : null,
+      
+      // Usage info (for conversion UI)
+      usage: {
+        plan: userPlan,
+        modelUsed: modelTier,
+        analysesUsed: userPlan === 'free' ? totalCount + 1 : 
+                      userPlan === 'creator' ? monthlyCount + 1 : 
+                      dailyCount + 1,
+        analysesLimit: userPlan === 'free' ? USAGE_LIMITS.free.totalAnalyses :
+                       userPlan === 'creator' ? USAGE_LIMITS.creator.monthlyAnalyses :
+                       USAGE_LIMITS.pro.dailyAnalyses,
+        isLastFreeAnalysis: userPlan === 'free' && totalCount === 0,
+      },
     });
     
   } catch (error) {
