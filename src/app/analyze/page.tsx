@@ -105,7 +105,7 @@ import {
   ArrowRightIcon,
   ChatBubbleLeftIcon,
 } from '@heroicons/react/24/outline';
-import { CheckCircleIcon, SparklesIcon as SparklesSolid } from '@heroicons/react/24/solid';
+import { CheckCircleIcon, SparklesIcon as SparklesSolid, PlayIcon } from '@heroicons/react/24/solid';
 import { HookSet, HookType, HOOK_TYPE_INFO } from '@/lib/hooks';
 
 // Mood options for creators to select
@@ -740,14 +740,45 @@ export default function AnalyzePage() {
               <div className="space-y-5 animate-fade-in">
                 {/* Compact Video Preview + Info Row */}
                 <div className="flex gap-4 items-center p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-                  {/* Small video thumbnail */}
-                  <div className="w-24 h-24 flex-shrink-0 bg-black rounded-xl overflow-hidden border border-white/[0.08]">
+                  {/* Video thumbnail with play button */}
+                  <div className="relative w-24 h-24 flex-shrink-0 bg-black rounded-xl overflow-hidden border border-white/[0.08] group">
                     <video
+                      id="preview-video"
                       src={preview || ''}
                       className="w-full h-full object-cover"
                       playsInline
                       muted
+                      preload="metadata"
+                      onLoadedMetadata={(e) => {
+                        // Seek to 0.1s to get a frame for thumbnail
+                        (e.target as HTMLVideoElement).currentTime = 0.1;
+                      }}
                     />
+                    {/* Play button overlay */}
+                    <button
+                      onClick={() => {
+                        const video = document.getElementById('preview-video') as HTMLVideoElement;
+                        if (video) {
+                          if (video.requestFullscreen) {
+                            video.muted = false;
+                            video.currentTime = 0;
+                            video.requestFullscreen();
+                            video.play();
+                          } else {
+                            // Fallback: just play in place
+                            video.muted = false;
+                            video.controls = true;
+                            video.currentTime = 0;
+                            video.play();
+                          }
+                        }
+                      }}
+                      className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/30 transition-colors cursor-pointer"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <PlayIcon className="w-5 h-5 text-white ml-0.5" />
+                      </div>
+                    </button>
                   </div>
                   
                   {/* File info */}
