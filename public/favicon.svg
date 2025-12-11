@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="borderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="50%" stop-color="#d946ef"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+    <linearGradient id="playGradient" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer rounded box with gradient -->
+  <rect x="0" y="0" width="32" height="32" rx="7" fill="url(#borderGradient)"/>
+  
+  <!-- Inner dark box -->
+  <rect x="3" y="3" width="26" height="26" rx="5" fill="#0a0a0c"/>
+  
+  <!-- Play triangle -->
+  <path d="M12 9v14l10-7z" fill="url(#playGradient)"/>
+</svg>

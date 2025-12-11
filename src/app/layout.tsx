@@ -6,6 +6,12 @@ export const metadata: Metadata = {
   title: "TokBox - AI Video Analyzer for TikTok Creators",
   description: "Get AI-powered feedback on your TikTok before you post. Viral potential score, hook analysis, and optimization tips.",
   keywords: ["TikTok", "video analyzer", "viral", "creator tools", "hook analysis"],
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/favicon.svg',
+  },
   openGraph: {
     title: "TokBox - Know If Your Video Will Go Viral",
     description: "Get AI-powered feedback before you post. Free instant analysis.",
