@@ -11,6 +11,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/api/analyze', // Public but we check auth in the route itself
   '/api/get-upload-url', // Public - needed for S3 presigned URLs
+  '/api/check-usage', // Public - checks if user can analyze
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

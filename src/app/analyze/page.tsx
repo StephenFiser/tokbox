@@ -497,6 +497,38 @@ export default function AnalyzePage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [restoredFromStorage, setRestoredFromStorage] = useState(false);
+  const [needsUpgrade, setNeedsUpgrade] = useState(false);
+  const [checkingUsage, setCheckingUsage] = useState(true);
+
+  // Check if signed-in user has remaining analyses
+  useEffect(() => {
+    const checkUsage = async () => {
+      if (!isLoaded) return;
+      
+      if (!isSignedIn) {
+        // Anonymous user - check localStorage
+        const freeUsed = localStorage.getItem('tokbox_free_used');
+        setNeedsUpgrade(!!freeUsed);
+        setCheckingUsage(false);
+        return;
+      }
+      
+      // For signed-in users, we'll do a lightweight check
+      // The API will enforce limits anyway, but we show UI proactively
+      try {
+        const response = await fetch('/api/check-usage');
+        if (response.ok) {
+          const data = await response.json();
+          setNeedsUpgrade(data.limitReached);
+        }
+      } catch {
+        // If check fails, let them try - API will enforce
+      }
+      setCheckingUsage(false);
+    };
+    
+    checkUsage();
+  }, [isSignedIn, isLoaded]);
 
   // Clean up any old IndexedDB data on mount (legacy cleanup)
   useEffect(() => {
@@ -654,8 +686,79 @@ export default function AnalyzePage() {
       />
 
       <main className="relative z-10 max-w-lg mx-auto px-5 py-6 safe-bottom">
+        {/* Loading state while checking usage */}
+        {checkingUsage && (
+          <div className="flex items-center justify-center py-20">
+            <ArrowPathIcon className="w-6 h-6 animate-spin text-zinc-500" />
+          </div>
+        )}
+        
+        {/* Upgrade Required Section */}
+        {!checkingUsage && needsUpgrade && !result && (
+          <div className="animate-fade-in">
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center mx-auto mb-5">
+                <SparklesIcon className="w-8 h-8 text-purple-400" />
+              </div>
+              <h1 className="text-[1.5rem] font-semibold tracking-tight mb-2">
+                {isSignedIn ? "You've used your free analysis" : "Sign in to continue"}
+              </h1>
+              <p className="text-zinc-400 text-[15px] max-w-sm mx-auto">
+                {isSignedIn 
+                  ? "Upgrade to keep analyzing your videos and get more hooks, captions, and insights."
+                  : "Create an account to analyze more videos."}
+              </p>
+            </div>
+            
+            {isSignedIn ? (
+              <>
+                {/* Inline pricing cards */}
+                <div className="space-y-3 mb-6">
+                  <a 
+                    href="/pricing" 
+                    className="block p-5 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 hover:border-purple-500/50 transition-all duration-200 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-white">Creator</span>
+                      <span className="text-purple-400 font-semibold">$9/mo</span>
+                    </div>
+                    <p className="text-[13px] text-zinc-400">30 analyses per month</p>
+                  </a>
+                  
+                  <a 
+                    href="/pricing" 
+                    className="block p-5 rounded-2xl bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] transition-all duration-200 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-white">Pro</span>
+                      <span className="text-zinc-300 font-semibold">$19/mo</span>
+                    </div>
+                    <p className="text-[13px] text-zinc-400">5 analyses per day, every day</p>
+                  </a>
+                </div>
+                
+                <a
+                  href="/pricing"
+                  className="flex items-center justify-center gap-2 w-full py-4 text-center text-[15px] font-semibold rounded-xl btn-premium cursor-pointer"
+                >
+                  View Plans
+                  <ArrowRightIcon className="w-4 h-4" />
+                </a>
+              </>
+            ) : (
+              <a
+                href="/sign-in?redirect_url=/analyze"
+                className="flex items-center justify-center gap-2 w-full py-4 text-center text-[15px] font-semibold rounded-xl btn-premium cursor-pointer"
+              >
+                Sign In
+                <ArrowRightIcon className="w-4 h-4" />
+              </a>
+            )}
+          </div>
+        )}
+        
         {/* Upload Section */}
-        {!result && (
+        {!checkingUsage && !needsUpgrade && !result && (
           <>
             {!file ? (
               <div className="animate-fade-in">

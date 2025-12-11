@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Navbar, TokBoxLogo } from '@/components/Navbar';
 import { CheckIcon } from '@heroicons/react/24/solid';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
-import { PricingTable } from '@clerk/nextjs';
+import { PricingTable, useUser } from '@clerk/nextjs';
 
 const FAQS = [
   {
@@ -26,6 +26,8 @@ const FAQS = [
 ];
 
 export default function PricingPage() {
+  const { isSignedIn } = useUser();
+  
   return (
     <div className="min-h-screen bg-[#09090b]">
       {/* Ambient background */}
@@ -36,12 +38,14 @@ export default function PricingPage() {
       {/* Header */}
       <Navbar 
         rightContent={
-          <Link
-            href="/analyze"
-            className="px-4 py-2.5 text-[14px] font-medium text-white bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] rounded-xl transition-all duration-200"
-          >
-            Try Free
-          </Link>
+          !isSignedIn ? (
+            <Link
+              href="/analyze"
+              className="px-4 py-2.5 text-[14px] font-medium text-white bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] rounded-xl transition-all duration-200"
+            >
+              Try Free
+            </Link>
+          ) : undefined
         }
       />
 
@@ -56,35 +60,37 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {/* Free Tier Card */}
-        <div className="mb-8 max-w-sm mx-auto">
-          <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300">
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-1">Free</h3>
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-3xl font-semibold">$0</span>
+        {/* Free Tier Card - only show for non-signed-in users */}
+        {!isSignedIn && (
+          <div className="mb-8 max-w-sm mx-auto">
+            <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-1">Free</h3>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-3xl font-semibold">$0</span>
+                </div>
+                <p className="text-[13px] text-zinc-500">Try it out</p>
               </div>
-              <p className="text-[13px] text-zinc-500">Try it out</p>
+
+              <ul className="space-y-3 mb-6">
+                {['1 video analysis', 'All 3 hook styles', 'Visual feedback', 'Caption ideas'].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-3 text-[14px]">
+                    <CheckIcon className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-400" />
+                    <span className="text-zinc-300">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href="/analyze"
+                className="flex items-center justify-center gap-2 w-full py-3 text-center text-[14px] font-semibold rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white border border-white/[0.06] transition-all duration-200"
+              >
+                Start Free
+                <ArrowRightIcon className="w-4 h-4" />
+              </Link>
             </div>
-
-            <ul className="space-y-3 mb-6">
-              {['1 video analysis', 'All 3 hook styles', 'Visual feedback', 'Caption ideas'].map((feature, i) => (
-                <li key={i} className="flex items-start gap-3 text-[14px]">
-                  <CheckIcon className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-400" />
-                  <span className="text-zinc-300">{feature}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              href="/analyze"
-              className="flex items-center justify-center gap-2 w-full py-3 text-center text-[14px] font-semibold rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white border border-white/[0.06] transition-all duration-200"
-            >
-              Start Free
-              <ArrowRightIcon className="w-4 h-4" />
-            </Link>
           </div>
-        </div>
+        )}
         
         {/* Clerk Pricing Table for Paid Plans */}
         <div className="mb-24">
@@ -129,7 +135,7 @@ export default function PricingPage() {
             href="/analyze"
             className="group inline-flex items-center justify-center gap-3 px-8 py-4 text-[16px] font-semibold text-white btn-premium rounded-2xl"
           >
-            Try Your First Analysis Free
+            {isSignedIn ? 'Start Analyzing' : 'Try Your First Analysis Free'}
             <ArrowRightIcon className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
         </div>
