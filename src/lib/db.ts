@@ -8,6 +8,51 @@ export const db = createClient({
 
 // Initialize the analyses table if it doesn't exist
 export async function initDb() {
+  // Check if we need to migrate the table (user_id needs to allow NULL for anonymous users)
+  try {
+    // Try to insert a test row with NULL user_id to check constraint
+    await db.execute(`
+      INSERT INTO analyses (user_id, mood, ip_address) VALUES (NULL, '_test_', '_test_')
+    `);
+    // If it worked, delete the test row
+    await db.execute(`DELETE FROM analyses WHERE mood = '_test_'`);
+  } catch {
+    // Constraint failed - need to recreate table with correct schema
+    console.log('Migrating analyses table to allow NULL user_id...');
+    
+    // Rename old table
+    await db.execute(`ALTER TABLE analyses RENAME TO analyses_old`);
+    
+    // Create new table with correct schema
+    await db.execute(`
+      CREATE TABLE analyses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT,
+        user_email TEXT,
+        ip_address TEXT,
+        mood TEXT NOT NULL,
+        video_duration_seconds REAL,
+        grade TEXT,
+        viral_score REAL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        model_used TEXT DEFAULT 'premium'
+      )
+    `);
+    
+    // Copy data from old table
+    await db.execute(`
+      INSERT INTO analyses (id, user_id, user_email, mood, video_duration_seconds, grade, viral_score, created_at, model_used)
+      SELECT id, user_id, user_email, mood, video_duration_seconds, grade, viral_score, created_at, model_used
+      FROM analyses_old
+    `);
+    
+    // Drop old table
+    await db.execute(`DROP TABLE analyses_old`);
+    
+    console.log('Migration complete.');
+  }
+  
+  // Ensure table exists (for fresh installs)
   await db.execute(`
     CREATE TABLE IF NOT EXISTS analyses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,13 +67,6 @@ export async function initDb() {
       model_used TEXT DEFAULT 'premium'
     )
   `);
-  
-  // Add ip_address column if it doesn't exist (migration for existing tables)
-  try {
-    await db.execute(`ALTER TABLE analyses ADD COLUMN ip_address TEXT`);
-  } catch {
-    // Column already exists, ignore error
-  }
   
   // Index for fast user lookups
   await db.execute(`
