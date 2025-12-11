@@ -240,3 +240,135 @@ h1, h2, h3, h4, h5, h6 {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/* ===== Clerk Component Overrides ===== */
+
+/* Main card container */
+.cl-card {
+  background: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+}
+
+/* Social buttons (Google, etc) */
+.cl-socialButtonsBlockButton {
+  background: #27272a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  height: 48px !important;
+  transition: background 0.2s !important;
+}
+
+.cl-socialButtonsBlockButton:hover {
+  background: #3f3f46 !important;
+}
+
+.cl-socialButtonsBlockButtonText {
+  color: white !important;
+  font-weight: 500 !important;
+  font-size: 15px !important;
+}
+
+/* Form inputs */
+.cl-formFieldInput {
+  background: #27272a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  height: 48px !important;
+  color: white !important;
+  font-size: 15px !important;
+}
+
+.cl-formFieldInput::placeholder {
+  color: #71717a !important;
+}
+
+.cl-formFieldInput:focus {
+  border-color: rgba(168, 85, 247, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1) !important;
+}
+
+/* Labels */
+.cl-formFieldLabel {
+  color: #d4d4d8 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+/* Primary button */
+.cl-formButtonPrimary {
+  background: #a855f7 !important;
+  border-radius: 12px !important;
+  height: 48px !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+  transition: background 0.2s !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background: #9333ea !important;
+}
+
+/* Divider */
+.cl-dividerLine {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.cl-dividerText {
+  color: #71717a !important;
+}
+
+/* Header */
+.cl-headerTitle {
+  color: white !important;
+}
+
+.cl-headerSubtitle {
+  color: #a1a1aa !important;
+}
+
+/* Footer links */
+.cl-footerActionLink {
+  color: #a855f7 !important;
+}
+
+.cl-footerActionLink:hover {
+  color: #c084fc !important;
+}
+
+.cl-footerActionText {
+  color: #71717a !important;
+}
+
+/* Identity preview (when showing email) */
+.cl-identityPreview {
+  background: #27272a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+}
+
+.cl-identityPreviewText {
+  color: white !important;
+}
+
+.cl-identityPreviewEditButton {
+  color: #a855f7 !important;
+}
+
+/* OTP input */
+.cl-otpCodeFieldInput {
+  background: #27272a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+/* Alerts */
+.cl-alert {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+  border-radius: 12px !important;
+}
+
+.cl-alertText {
+  color: #f87171 !important;
+}
