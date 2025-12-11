@@ -23,6 +23,13 @@ export async function initDb() {
     )
   `);
   
+  // Add ip_address column if it doesn't exist (migration for existing tables)
+  try {
+    await db.execute(`ALTER TABLE analyses ADD COLUMN ip_address TEXT`);
+  } catch {
+    // Column already exists, ignore error
+  }
+  
   // Index for fast user lookups
   await db.execute(`
     CREATE INDEX IF NOT EXISTS idx_analyses_user_id ON analyses(user_id)
