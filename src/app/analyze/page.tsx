@@ -705,89 +705,89 @@ export default function AnalyzePage() {
         }
       />
 
-      <main className="relative z-10 max-w-lg mx-auto px-6 py-10 safe-bottom">
+      <main className="relative z-10 max-w-lg mx-auto px-5 py-6 safe-bottom">
         {/* Upload Section */}
         {!result && (
           <>
             {!file ? (
               <div className="animate-fade-in">
-                <div className="text-center mb-10">
-                  <h1 className="text-[1.75rem] font-semibold tracking-tight mb-2">Analyze Your Video</h1>
-                  <p className="text-zinc-500">Get AI feedback in 30 seconds</p>
+                <div className="text-center mb-6">
+                  <h1 className="text-[1.5rem] font-semibold tracking-tight mb-1">Analyze Your Video</h1>
+                  <p className="text-zinc-500 text-[14px]">Get AI feedback in 30 seconds</p>
                 </div>
                 
                 <div
                   {...getRootProps()}
-                  className={`relative border-2 border-dashed rounded-3xl p-12 text-center transition-all duration-300 cursor-pointer ${
+                  className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 cursor-pointer ${
                     isDragActive
                       ? 'border-purple-500/50 bg-purple-500/[0.08]'
                       : 'border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.02]'
                   }`}
                 >
                   <input {...getInputProps()} />
-                  <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-6">
-                    <ArrowUpTrayIcon className="w-7 h-7 text-zinc-500" />
+                  <div className="w-14 h-14 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
+                    <ArrowUpTrayIcon className="w-6 h-6 text-zinc-500" />
                   </div>
-                  <p className="text-lg font-medium text-white mb-2">
+                  <p className="text-[16px] font-medium text-white mb-1.5">
                     {isDragActive ? 'Drop it here' : 'Upload your video'}
                   </p>
-                  <p className="text-[14px] text-zinc-500 mb-1">
-                    Drag & drop or tap to select
-                  </p>
-                  <p className="text-[13px] text-zinc-600">
+                  <p className="text-[13px] text-zinc-500">
                     MP4, MOV · Max 100MB
                   </p>
                 </div>
               </div>
             ) : (
-              <div className="space-y-6 animate-fade-in">
-                {/* Video Preview */}
-                <div className="aspect-[9/16] max-h-[50vh] bg-black rounded-3xl overflow-hidden border border-white/[0.08] shadow-2xl">
-                  <video
-                    src={preview || ''}
-                    className="w-full h-full object-contain"
-                    controls
-                    playsInline
-                  />
-                </div>
-
-                {/* File Info */}
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[14px] text-zinc-400 truncate flex-1 font-medium">
-                    {file.name}
-                  </span>
-                  <button
-                    onClick={reset}
-                    className="text-[14px] text-zinc-500 hover:text-white transition-colors duration-200 font-medium cursor-pointer"
-                  >
-                    Remove
-                  </button>
-                </div>
-
-                {/* Mood Selector */}
-                <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-                  <div className="flex items-center gap-2.5 mb-4">
-                    <SparklesIcon className="w-5 h-5 text-purple-400" />
-                    <div>
-                      <h3 className="font-semibold text-[15px]">What&apos;s the vibe?</h3>
-                      <p className="text-[13px] text-zinc-500">This helps us suggest better hooks</p>
-                    </div>
+              <div className="space-y-5 animate-fade-in">
+                {/* Compact Video Preview + Info Row */}
+                <div className="flex gap-4 items-center p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                  {/* Small video thumbnail */}
+                  <div className="w-24 h-24 flex-shrink-0 bg-black rounded-xl overflow-hidden border border-white/[0.08]">
+                    <video
+                      src={preview || ''}
+                      className="w-full h-full object-cover"
+                      playsInline
+                      muted
+                    />
                   </div>
                   
-                  <div className="flex flex-wrap gap-2">
+                  {/* File info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] text-white font-medium truncate mb-1">
+                      {file.name}
+                    </p>
+                    <p className="text-[13px] text-zinc-500 mb-2">
+                      {(file.size / (1024 * 1024)).toFixed(1)} MB
+                    </p>
+                    <button
+                      onClick={reset}
+                      className="text-[13px] text-zinc-500 hover:text-red-400 transition-colors duration-200 cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mood Selector - Compact */}
+                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <SparklesIcon className="w-4 h-4 text-purple-400" />
+                    <h3 className="font-semibold text-[14px]">What&apos;s the vibe?</h3>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-1.5">
                     {MOOD_OPTIONS.map((mood) => {
                       const IconComponent = mood.icon;
                       return (
                         <button
                           key={mood.id}
                           onClick={() => setSelectedMood(selectedMood === mood.id ? null : mood.id)}
-                          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-200 cursor-pointer ${
+                          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-200 cursor-pointer ${
                             selectedMood === mood.id
                               ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300'
                               : 'bg-white/[0.03] border border-white/[0.06] text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-300'
                           }`}
                         >
-                          <IconComponent className="w-4 h-4" />
+                          <IconComponent className="w-3.5 h-3.5" />
                           {mood.label}
                         </button>
                       );
@@ -795,7 +795,7 @@ export default function AnalyzePage() {
                   </div>
                   
                   {selectedMood && (
-                    <p className="mt-3 text-[13px] text-zinc-500">
+                    <p className="mt-2.5 text-[12px] text-zinc-500">
                       {MOOD_OPTIONS.find(m => m.id === selectedMood)?.desc}
                     </p>
                   )}
@@ -805,7 +805,7 @@ export default function AnalyzePage() {
                 <button
                   onClick={analyzeVideo}
                   disabled={analyzing}
-                  className="w-full py-4 px-6 text-[16px] font-semibold text-white btn-premium rounded-2xl disabled:opacity-60 disabled:hover:transform-none flex items-center justify-center gap-3 cursor-pointer"
+                  className="w-full py-3.5 px-6 text-[15px] font-semibold text-white btn-premium rounded-xl disabled:opacity-60 disabled:hover:transform-none flex items-center justify-center gap-2.5 cursor-pointer"
                 >
                   {analyzing ? (
                     <>
