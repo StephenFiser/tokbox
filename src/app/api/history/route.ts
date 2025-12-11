@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { getUserAnalysisHistory, getAnalysisById } from '@/lib/db';
+import { getUserAnalysisHistory, getAnalysisById, initDb } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +11,9 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
+    
+    // Ensure DB schema is up to date (adds results_json column if missing)
+    await initDb();
     
     const { searchParams } = new URL(request.url);
     const analysisId = searchParams.get('id');
