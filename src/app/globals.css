@@ -383,3 +383,7 @@ h1, h2, h3, h4, h5, h6 {
 .cl-cardBox {
   background: #09090b !important;
 }
+
+.cl-drawerRoot {
+  z-index: 999999999 !important;
+}
