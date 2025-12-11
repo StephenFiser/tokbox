@@ -157,8 +157,18 @@ interface AnalysisResult {
   hooks: HookSet;
   recommendedHookType: HookType;
   existingTextAssessment: string | null;
+  whyThisHookType: string | null;
   captions: string[];
   processingTimeMs: number;
+  
+  // Advanced insights
+  theOneThing: string | null;
+  advancedInsight: string | null;
+  moodStrategy: {
+    name: string;
+    whatMatters: string[];
+    advancedTips: string[];
+  } | null;
 }
 
 function CopyButton({ text, size = 'md' }: { text: string; size?: 'sm' | 'md' }) {
@@ -803,6 +813,38 @@ export default function AnalyzePage() {
               </div>
             )}
 
+            {/* The One Thing - Most impactful change */}
+            {result.theOneThing && (
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/[0.08] to-pink-500/[0.04] border border-purple-500/20">
+                <h3 className="font-semibold text-purple-300 mb-3 flex items-center gap-2.5 text-[15px]">
+                  <span className="w-7 h-7 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <SparklesIcon className="w-4 h-4" />
+                  </span>
+                  The One Thing
+                </h3>
+                <p className="text-[14px] text-zinc-200 leading-relaxed">
+                  {result.theOneThing}
+                </p>
+              </div>
+            )}
+
+            {/* Advanced Insight */}
+            {result.advancedInsight && (
+              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-lg bg-indigo-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <LightBulbIcon className="w-3.5 h-3.5 text-indigo-400" />
+                  </div>
+                  <div>
+                    <span className="text-[12px] font-medium text-indigo-400 uppercase tracking-wide">Pro Insight</span>
+                    <p className="text-[14px] text-zinc-300 leading-relaxed mt-1">
+                      {result.advancedInsight}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Divider */}
             <div className="relative py-8">
               <div className="absolute inset-0 flex items-center">
@@ -829,6 +871,13 @@ export default function AnalyzePage() {
                 </p>
               </div>
               <HookTabs hooks={result.hooks} recommendedType={result.recommendedHookType} />
+              
+              {/* Why this hook type */}
+              {result.whyThisHookType && (
+                <p className="mt-4 text-[13px] text-zinc-500 italic">
+                  {result.whyThisHookType}
+                </p>
+              )}
             </div>
 
             {/* Captions */}
