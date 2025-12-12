@@ -51,6 +51,7 @@ import {
   LightBulbIcon,
   ArrowRightIcon,
   ChatBubbleLeftIcon,
+  MegaphoneIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon, SparklesIcon as SparklesSolid, PlayIcon } from '@heroicons/react/24/solid';
 import { HookSet, HookType, HOOK_TYPE_INFO } from '@/lib/hooks';
@@ -75,6 +76,7 @@ const MOOD_OPTIONS = [
   { id: 'vulnerable', label: 'Vulnerable', icon: ChatBubbleBottomCenterTextIcon, desc: 'Real talk, honest, emotional' },
   { id: 'chaotic', label: 'Chaotic', icon: CloudIcon, desc: 'Unhinged, random, unpredictable' },
   { id: 'asmr', label: 'Satisfying', icon: MusicalNoteIcon, desc: 'ASMR vibes, calming, satisfying' },
+  { id: 'promo', label: 'Promo', icon: MegaphoneIcon, desc: 'Promoting a product, service, or launch' },
 ] as const;
 
 type MoodId = typeof MOOD_OPTIONS[number]['id'];

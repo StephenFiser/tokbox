@@ -1234,6 +1234,46 @@ const MOOD_STRATEGIES: Record<string, MoodStrategy> = {
       'Consistent aesthetic/style builds following',
       'Loop potential: Can this video loop satisfyingly?'
     ]
+  },
+
+  promo: {
+    name: 'Promo',
+    persona: `You're a direct response marketing expert who knows that the best promotional content doesn't FEEL promotional. You understand that TikTok users have extremely sensitive "ad radar" and will scroll past anything that smells like a traditional ad.`,
+    psychology: `Promo content on TikTok only works when it doesn't feel like promo. The algorithm deprioritizes obvious ads, and users skip them instantly. The winning formula: HOOK them with entertainment/value FIRST, reveal the product/promo SECOND. The "oh wait, this is an ad?" moment should come AFTER they're already invested.`,
+    whatMatters: [
+      'Does it feel native to TikTok or does it scream "AD"?',
+      'Is there a genuine hook before the promo element?',
+      'Authenticity - do they actually use/believe in what they\'re promoting?',
+      'Value-first approach - are they giving before asking?',
+      'The reveal timing - promotion should come after hook lands'
+    ],
+    commonMistakes: [
+      'Starting with the product/offer (instant scroll)',
+      'Using corporate language or scripts',
+      'Too polished/produced (feels like an ad)',
+      'Listing features instead of showing transformation/results',
+      'Hard sell language ("Buy now!", "Link in bio!", "Limited time!")',
+      'No entertainment value - just pure promotion'
+    ],
+    famousPatterns: [
+      'The "I found this thing" discovery angle',
+      'The before/after transformation (showing results)',
+      'The "storytime" that happens to involve the product',
+      'The honest review that mentions flaws too',
+      'The "day in my life" where product appears naturally',
+      'The problem-agitate-solution (but make it entertaining)'
+    ],
+    scoringFocus: 'Native feel 40%, Hook before promo 30%, Authenticity 30%. The best promo doesn\'t feel like promo.',
+    hookStyle: 'Hook should NOT mention the product. Entertainment/curiosity first. "This changed everything" is better than "Check out this product".',
+    captionStyle: 'Conversational, like telling a friend about something. Avoid sales language. Questions work well: "Has anyone else tried this?" feels native.',
+    advancedTips: [
+      'Rule of thumb: Could this video be entertaining without the product? If not, rework it',
+      'Show results/transformation, not features. People buy outcomes, not products',
+      'User-generated style outperforms polished ads 10:1 on TikTok',
+      'The "soft CTA" wins: "I\'ll leave a link" > "Link in bio!" > "Buy now!"',
+      'Honest reviews that mention ONE drawback feel more authentic and convert better',
+      'Storytelling > selling. Wrap the promo in a narrative'
+    ]
   }
 };
 
