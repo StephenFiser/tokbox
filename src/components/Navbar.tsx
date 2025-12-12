@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { SignedIn, SignedOut } from '@clerk/nextjs';
 import { AccountDropdown } from './AccountDropdown';
 
-// Custom TokBox logo - a stylized play button in a box
+// Custom tok.box logo - a stylized play button in a box
 export function TokBoxLogo({ className = "w-9 h-9" }: { className?: string }) {
   return (
     <div className={`${className} relative`}>
@@ -53,7 +53,7 @@ export function Navbar({ showPricing = true, rightContent, sticky = false }: Nav
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3">
           <TokBoxLogo />
-          <span className="text-[16px] font-semibold tracking-tight text-white">TokBox</span>
+          <span className="text-[16px] font-semibold tracking-tight text-white">tok.box</span>
         </Link>
 
         {/* Right side */}

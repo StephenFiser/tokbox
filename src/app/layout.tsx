@@ -4,7 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TokBox - AI Video Analyzer for TikTok Creators",
+  title: "tok.box - AI Video Analyzer for TikTok Creators",
   description: "Get AI-powered feedback on your TikTok before you post. Viral potential score, hook analysis, and optimization tips.",
   keywords: ["TikTok", "video analyzer", "viral", "creator tools", "hook analysis"],
   icons: {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     apple: '/favicon.svg',
   },
   openGraph: {
-    title: "TokBox - Know If Your Video Will Go Viral",
+    title: "tok.box - Know If Your Video Will Go Viral",
     description: "Get AI-powered feedback before you post. Free instant analysis.",
     type: "website",
   },

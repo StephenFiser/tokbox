@@ -317,7 +317,7 @@ function Dashboard() {
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2.5 text-zinc-500">
             <TokBoxLogo className="w-7 h-7" />
-            <span className="text-[14px] font-medium">TokBox</span>
+            <span className="text-[14px] font-medium">tok.box</span>
           </div>
           <div className="flex gap-6 text-[14px] text-zinc-500">
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
@@ -661,7 +661,7 @@ function LandingPage() {
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2.5 text-zinc-500">
             <TokBoxLogo className="w-7 h-7" />
-            <span className="text-[14px] font-medium">TokBox</span>
+            <span className="text-[14px] font-medium">tok.box</span>
           </div>
           <div className="flex gap-6 text-[14px] text-zinc-500">
             <Link href="/privacy" className="hover:text-white transition-colors duration-200">Privacy</Link>

@@ -1,0 +1,194 @@
+'use client';
+
+import Link from 'next/link';
+import { Navbar, TokBoxLogo } from '@/components/Navbar';
+
+export default function TermsPage() {
+  return (
+    <div className="min-h-screen bg-[#09090b]">
+      <Navbar showPricing={false} />
+
+      <main className="max-w-2xl mx-auto px-6 py-12">
+        <h1 className="text-[2rem] font-semibold tracking-tight mb-2">Terms of Service</h1>
+        <p className="text-zinc-500 mb-10">Last updated: December 2024</p>
+
+        <div className="prose prose-invert prose-zinc max-w-none space-y-8">
+          <section>
+            <h2 className="text-xl font-semibold mb-4">1. Acceptance of Terms</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              By accessing or using tok.box ("Service"), you agree to be bound by these Terms of Service. 
+              If you do not agree to these terms, please do not use our Service.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">2. Description of Service</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              tok.box provides AI-powered video analysis for content creators. Our Service analyzes videos 
+              you upload and provides feedback, scores, hook suggestions, and other insights to help 
+              improve your content's viral potential.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">3. User Accounts</h2>
+            <p className="text-zinc-400 leading-relaxed mb-4">To use certain features, you must create an account. You agree to:</p>
+            <ul className="list-disc list-inside text-zinc-400 space-y-2 ml-4">
+              <li>Provide accurate and complete information</li>
+              <li>Maintain the security of your account credentials</li>
+              <li>Notify us immediately of any unauthorized access</li>
+              <li>Accept responsibility for all activities under your account</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">4. Acceptable Use</h2>
+            <p className="text-zinc-400 leading-relaxed mb-4">You agree not to upload or analyze videos that:</p>
+            <ul className="list-disc list-inside text-zinc-400 space-y-2 ml-4">
+              <li>Violate any applicable laws or regulations</li>
+              <li>Infringe on intellectual property rights of others</li>
+              <li>Contain illegal, harmful, or offensive content</li>
+              <li>Include content depicting minors inappropriately</li>
+              <li>Contain malware or malicious code</li>
+            </ul>
+            <p className="text-zinc-400 leading-relaxed mt-4">
+              We reserve the right to suspend or terminate accounts that violate these terms.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">5. Content Ownership</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              You retain all ownership rights to the videos you upload. By using our Service, you grant 
+              us a limited, temporary license to process your videos for analysis purposes only. We do 
+              not claim any ownership of your content.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">6. Subscription and Payments</h2>
+            <p className="text-zinc-400 leading-relaxed mb-4">
+              Some features require a paid subscription. By subscribing, you agree to:
+            </p>
+            <ul className="list-disc list-inside text-zinc-400 space-y-2 ml-4">
+              <li>Pay all fees associated with your chosen plan</li>
+              <li>Automatic renewal unless cancelled before the billing date</li>
+              <li>No refunds for partial billing periods (except where required by law)</li>
+            </ul>
+            <p className="text-zinc-400 leading-relaxed mt-4">
+              We reserve the right to change pricing with 30 days notice. You can cancel your 
+              subscription at any time through your account settings.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">7. Usage Limits</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              Each subscription tier has specific usage limits (analyses per day/month). Exceeding these 
+              limits may result in reduced service or require upgrading your plan. We reserve the right 
+              to enforce fair use policies.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">8. AI-Generated Content</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              Our analysis, suggestions, and recommendations are generated by AI and are provided for 
+              informational purposes only. We do not guarantee that following our suggestions will result 
+              in viral content or any specific outcome. Results may vary based on many factors outside 
+              our control.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">9. Disclaimer of Warranties</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. WE DO 
+              NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR COMPLETELY SECURE. WE 
+              DISCLAIM ALL WARRANTIES INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND 
+              NON-INFRINGEMENT.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">10. Limitation of Liability</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, TOK.BOX SHALL NOT BE LIABLE FOR ANY INDIRECT, 
+              INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, 
+              OR GOODWILL, ARISING FROM YOUR USE OF THE SERVICE. OUR TOTAL LIABILITY SHALL NOT EXCEED 
+              THE AMOUNT YOU PAID US IN THE PAST 12 MONTHS.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">11. Indemnification</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              You agree to indemnify and hold harmless tok.box and its officers, directors, employees, 
+              and agents from any claims, damages, or expenses arising from your use of the Service or 
+              violation of these terms.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">12. Modifications to Service</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              We reserve the right to modify, suspend, or discontinue any part of the Service at any 
+              time. We will provide reasonable notice of significant changes when possible.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">13. Termination</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              We may terminate or suspend your account at any time for violation of these terms. Upon 
+              termination, your right to use the Service ceases immediately. Provisions that by their 
+              nature should survive termination will remain in effect.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">14. Governing Law</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              These terms shall be governed by the laws of the State of Delaware, United States, without 
+              regard to conflict of law principles. Any disputes shall be resolved in the courts of 
+              Delaware.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">15. Changes to Terms</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              We may update these terms from time to time. We will notify you of material changes by 
+              posting the new terms on this page. Your continued use of the Service after changes 
+              constitutes acceptance of the new terms.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">16. Contact Us</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              If you have questions about these Terms of Service, please contact us at:{' '}
+              <a href="mailto:support@tok.box" className="text-purple-400 hover:text-purple-300">
+                support@tok.box
+              </a>
+            </p>
+          </section>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="px-6 py-8 border-t border-white/[0.04] mt-20">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2.5 text-zinc-500">
+            <TokBoxLogo className="w-7 h-7" />
+            <span className="text-[14px] font-medium">tok.box</span>
+          </div>
+          <div className="flex gap-6 text-[14px] text-zinc-500">
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <span className="text-white">Terms</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
