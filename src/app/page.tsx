@@ -259,10 +259,8 @@ function Dashboard() {
               {recentAnalyses.map((analysis) => (
                 <Link
                   key={analysis.id}
-                  href={analysis.hasResults ? `/history/${analysis.id}` : '#'}
-                  className={`flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] transition-all ${
-                    analysis.hasResults ? 'hover:bg-white/[0.04] hover:border-white/[0.1] cursor-pointer' : 'opacity-60'
-                  }`}
+                  href={`/history/${analysis.id}`}
+                  className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] transition-all hover:bg-white/[0.04] hover:border-white/[0.1] cursor-pointer"
                 >
                   {/* Grade */}
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-[15px] font-bold ${GRADE_COLORS[analysis.grade] || 'text-zinc-400 bg-zinc-800'}`}>
@@ -285,9 +283,7 @@ function Dashboard() {
                     <span className="text-[12px] text-zinc-500">{formatDate(analysis.createdAt)}</span>
                   </div>
                   
-                  {analysis.hasResults && (
-                    <ArrowRightIcon className="w-4 h-4 text-zinc-600" />
-                  )}
+                  <ArrowRightIcon className="w-4 h-4 text-zinc-600" />
                 </Link>
               ))}
             </div>

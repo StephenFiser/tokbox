@@ -88,11 +88,19 @@ function formatDate(dateString: string) {
   });
 }
 
+interface AnalysisData {
+  mood: string;
+  created_at: string;
+  results_json?: string;
+  grade?: string;
+  viral_score?: number;
+}
+
 export default function HistoryDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { user, isLoaded } = useUser();
-  const [analysis, setAnalysis] = useState<{ mood: string; created_at: string; results_json: string } | null>(null);
+  const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -133,13 +141,13 @@ export default function HistoryDetailPage() {
     );
   }
 
-  if (!user || !analysis || !result) {
+  if (!user || !analysis) {
     return (
       <div className="min-h-screen bg-[#09090b]">
         <Navbar showPricing={false} />
         <div className="max-w-lg mx-auto px-6 py-20 text-center">
           <h1 className="text-2xl font-semibold mb-4">Analysis not found</h1>
-          <p className="text-zinc-400 mb-6">This analysis doesn't exist or you don't have access to it.</p>
+          <p className="text-zinc-400 mb-6">This analysis doesn&apos;t exist or you don&apos;t have access to it.</p>
           <Link href="/history" className="text-purple-400 hover:text-purple-300">
             ← Back to history
           </Link>
@@ -148,7 +156,11 @@ export default function HistoryDetailPage() {
     );
   }
 
-  const gradeStyle = GRADE_COLORS[result.grade] || { text: 'text-zinc-400', bg: 'from-zinc-500/20 to-zinc-500/5' };
+  // Get grade from full results or from basic analysis data
+  const grade = result?.grade || analysis.grade || '—';
+  const viralPotential = result?.viralPotential || analysis.viral_score;
+  const gradeStyle = GRADE_COLORS[grade] || { text: 'text-zinc-400', bg: 'from-zinc-500/20 to-zinc-500/5' };
+  const hasFullResults = !!result;
 
   return (
     <div className="min-h-screen bg-[#09090b]">
@@ -186,142 +198,165 @@ export default function HistoryDetailPage() {
         <div className={`p-6 rounded-2xl bg-gradient-to-b ${gradeStyle.bg} border border-white/[0.06] mb-6`}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <span className={`text-5xl font-bold ${gradeStyle.text}`}>{result.grade}</span>
-              <p className="text-[14px] text-zinc-400 mt-1">Viral Potential: {result.viralPotential}/10</p>
+              <span className={`text-5xl font-bold ${gradeStyle.text}`}>{grade}</span>
+              {viralPotential && (
+                <p className="text-[14px] text-zinc-400 mt-1">Viral Potential: {viralPotential}/10</p>
+              )}
             </div>
           </div>
-          <p className="text-[15px] text-zinc-300 leading-relaxed">{result.summary}</p>
-        </div>
-
-        {/* What AI Sees */}
-        <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] mb-6">
-          <div className="flex items-center gap-2.5 mb-3">
-            <EyeIcon className="w-4 h-4 text-zinc-500" />
-            <h3 className="text-[13px] font-medium text-zinc-500 uppercase tracking-wide">What we see</h3>
-          </div>
-          <p className="text-[15px] text-zinc-300 leading-relaxed">{result.contentDescription}</p>
-        </div>
-
-        {/* Scores */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {Object.entries(result.scores).map(([key, score]) => (
-            <div key={key} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-              <div className="text-2xl font-bold text-white mb-1">{score.score}/10</div>
-              <div className="text-[12px] text-zinc-500">{score.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Strengths & Improvements */}
-        <div className="grid gap-4 sm:grid-cols-2 mb-6">
-          {result.strengths.length > 0 && (
-            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-              <h3 className="text-[13px] font-medium text-emerald-400 uppercase tracking-wide mb-3">
-                ✓ What's Working
-              </h3>
-              <ul className="space-y-2">
-                {result.strengths.map((item, i) => (
-                  <li key={i} className="text-[14px] text-zinc-300 flex items-start gap-2">
-                    <CheckIcon className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          
-          {result.improvements.length > 0 && (
-            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-              <h3 className="text-[13px] font-medium text-amber-400 uppercase tracking-wide mb-3">
-                → To Improve
-              </h3>
-              <ul className="space-y-2">
-                {result.improvements.map((item, i) => (
-                  <li key={i} className="text-[14px] text-zinc-300 flex items-start gap-2">
-                    <ArrowRightIcon className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {hasFullResults ? (
+            <p className="text-[15px] text-zinc-300 leading-relaxed">{result.summary}</p>
+          ) : (
+            <p className="text-[15px] text-zinc-400 leading-relaxed italic">
+              Full analysis details not available for this older analysis.
+            </p>
           )}
         </div>
 
-        {/* Hooks */}
-        {result.hooks && Object.keys(result.hooks).length > 0 && (
-          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] mb-6">
-            <h3 className="text-[13px] font-medium text-zinc-500 uppercase tracking-wide mb-4">
-              Suggested Hooks
-            </h3>
-            <div className="space-y-4">
-              {Object.entries(result.hooks).map(([type, hooks]) => (
-                <div key={type}>
-                  <div className="flex items-center gap-2 mb-2">
-                    {type === 'curiosity' && <LightBulbIcon className="w-4 h-4 text-yellow-400" />}
-                    {type === 'pattern_interrupt' && <BoltIcon className="w-4 h-4 text-blue-400" />}
-                    {type === 'aspirational' && <SparklesIcon className="w-4 h-4 text-purple-400" />}
-                    <span className="text-[13px] font-medium text-zinc-400 capitalize">
-                      {type.replace('_', ' ')}
-                    </span>
-                    {type === result.recommendedHookType && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-medium">
-                        RECOMMENDED
-                      </span>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    {hooks.map((hook, i) => (
-                      <div 
-                        key={i}
-                        className="flex items-start justify-between gap-3 p-3 rounded-lg bg-white/[0.02] group"
-                      >
-                        <p className="text-[14px] text-zinc-300">{hook.text}</p>
-                        <button
-                          onClick={() => copyToClipboard(hook.text, i)}
-                          className="p-1.5 rounded-md hover:bg-white/[0.05] transition-colors flex-shrink-0"
-                        >
-                          {copiedIndex === i ? (
-                            <CheckIcon className="w-4 h-4 text-emerald-400" />
-                          ) : (
-                            <ClipboardIcon className="w-4 h-4 text-zinc-500" />
-                          )}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Limited results notice for old analyses */}
+        {!hasFullResults && (
+          <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-6">
+            <p className="text-[14px] text-amber-200">
+              This analysis was done before we started saving detailed results. 
+              Only the grade and score are available. Run a new analysis to see full details!
+            </p>
           </div>
         )}
 
-        {/* Captions */}
-        {result.captions && result.captions.length > 0 && (
-          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] mb-6">
-            <h3 className="text-[13px] font-medium text-zinc-500 uppercase tracking-wide mb-4">
-              Caption Ideas
-            </h3>
-            <div className="space-y-2">
-              {result.captions.map((caption, i) => (
-                <div 
-                  key={i}
-                  className="flex items-start justify-between gap-3 p-3 rounded-lg bg-white/[0.02] group"
-                >
-                  <p className="text-[14px] text-zinc-300">{caption}</p>
-                  <button
-                    onClick={() => copyToClipboard(caption, 100 + i)}
-                    className="p-1.5 rounded-md hover:bg-white/[0.05] transition-colors flex-shrink-0"
-                  >
-                    {copiedIndex === 100 + i ? (
-                      <CheckIcon className="w-4 h-4 text-emerald-400" />
-                    ) : (
-                      <ClipboardIcon className="w-4 h-4 text-zinc-500" />
-                    )}
-                  </button>
+        {/* Full results section - only show if we have full results */}
+        {hasFullResults && (
+          <>
+            {/* What AI Sees */}
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] mb-6">
+              <div className="flex items-center gap-2.5 mb-3">
+                <EyeIcon className="w-4 h-4 text-zinc-500" />
+                <h3 className="text-[13px] font-medium text-zinc-500 uppercase tracking-wide">What we see</h3>
+              </div>
+              <p className="text-[15px] text-zinc-300 leading-relaxed">{result.contentDescription}</p>
+            </div>
+
+            {/* Scores */}
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              {Object.entries(result.scores).map(([key, score]) => (
+                <div key={key} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                  <div className="text-2xl font-bold text-white mb-1">{score.score}/10</div>
+                  <div className="text-[12px] text-zinc-500">{score.label}</div>
                 </div>
               ))}
             </div>
-          </div>
+
+            {/* Strengths & Improvements */}
+            <div className="grid gap-4 sm:grid-cols-2 mb-6">
+              {result.strengths && result.strengths.length > 0 && (
+                <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+                  <h3 className="text-[13px] font-medium text-emerald-400 uppercase tracking-wide mb-3">
+                    ✓ What&apos;s Working
+                  </h3>
+                  <ul className="space-y-2">
+                    {result.strengths.map((item, i) => (
+                      <li key={i} className="text-[14px] text-zinc-300 flex items-start gap-2">
+                        <CheckIcon className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {result.improvements && result.improvements.length > 0 && (
+                <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+                  <h3 className="text-[13px] font-medium text-amber-400 uppercase tracking-wide mb-3">
+                    → To Improve
+                  </h3>
+                  <ul className="space-y-2">
+                    {result.improvements.map((item, i) => (
+                      <li key={i} className="text-[14px] text-zinc-300 flex items-start gap-2">
+                        <ArrowRightIcon className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Hooks */}
+            {result.hooks && Object.keys(result.hooks).length > 0 && (
+              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] mb-6">
+                <h3 className="text-[13px] font-medium text-zinc-500 uppercase tracking-wide mb-4">
+                  Suggested Hooks
+                </h3>
+                <div className="space-y-4">
+                  {Object.entries(result.hooks).map(([type, hooks]) => (
+                    <div key={type}>
+                      <div className="flex items-center gap-2 mb-2">
+                        {type === 'curiosity' && <LightBulbIcon className="w-4 h-4 text-yellow-400" />}
+                        {type === 'pattern_interrupt' && <BoltIcon className="w-4 h-4 text-blue-400" />}
+                        {type === 'aspirational' && <SparklesIcon className="w-4 h-4 text-purple-400" />}
+                        <span className="text-[13px] font-medium text-zinc-400 capitalize">
+                          {type.replace('_', ' ')}
+                        </span>
+                        {type === result.recommendedHookType && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-medium">
+                            RECOMMENDED
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        {hooks.map((hook, i) => (
+                          <div 
+                            key={i}
+                            className="flex items-start justify-between gap-3 p-3 rounded-lg bg-white/[0.02] group"
+                          >
+                            <p className="text-[14px] text-zinc-300">{hook.text}</p>
+                            <button
+                              onClick={() => copyToClipboard(hook.text, i)}
+                              className="p-1.5 rounded-md hover:bg-white/[0.05] transition-colors flex-shrink-0 cursor-pointer"
+                            >
+                              {copiedIndex === i ? (
+                                <CheckIcon className="w-4 h-4 text-emerald-400" />
+                              ) : (
+                                <ClipboardIcon className="w-4 h-4 text-zinc-500" />
+                              )}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Captions */}
+            {result.captions && result.captions.length > 0 && (
+              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] mb-6">
+                <h3 className="text-[13px] font-medium text-zinc-500 uppercase tracking-wide mb-4">
+                  Caption Ideas
+                </h3>
+                <div className="space-y-2">
+                  {result.captions.map((caption, i) => (
+                    <div 
+                      key={i}
+                      className="flex items-start justify-between gap-3 p-3 rounded-lg bg-white/[0.02] group"
+                    >
+                      <p className="text-[14px] text-zinc-300">{caption}</p>
+                      <button
+                        onClick={() => copyToClipboard(caption, 100 + i)}
+                        className="p-1.5 rounded-md hover:bg-white/[0.05] transition-colors flex-shrink-0 cursor-pointer"
+                      >
+                        {copiedIndex === 100 + i ? (
+                          <CheckIcon className="w-4 h-4 text-emerald-400" />
+                        ) : (
+                          <ClipboardIcon className="w-4 h-4 text-zinc-500" />
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Analyze another */}

@@ -170,12 +170,8 @@ export default function HistoryPage() {
             {history.map((item) => (
               <Link
                 key={item.id}
-                href={item.hasResults ? `/history/${item.id}` : '#'}
-                className={`block p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] transition-all ${
-                  item.hasResults 
-                    ? 'hover:bg-white/[0.04] hover:border-white/[0.1] cursor-pointer' 
-                    : 'opacity-60 cursor-default'
-                }`}
+                href={`/history/${item.id}`}
+                className="block p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] transition-all hover:bg-white/[0.04] hover:border-white/[0.1] cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -201,9 +197,7 @@ export default function HistoryPage() {
                     </div>
                   </div>
                   
-                  {item.hasResults && (
-                    <ArrowRightIcon className="w-4 h-4 text-zinc-600" />
-                  )}
+                  <ArrowRightIcon className="w-4 h-4 text-zinc-600" />
                 </div>
               </Link>
             ))}
