@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="borderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="50%" stop-color="#d946ef"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+    <linearGradient id="playGradient" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background for maskable safe zone -->
+  <rect x="0" y="0" width="192" height="192" fill="#09090b"/>
+  
+  <!-- Centered icon (safe zone is ~80% of icon, so 40px padding each side for 192px = 112px icon) -->
+  <g transform="translate(40, 40)">
+    <!-- Outer rounded box with gradient -->
+    <rect x="0" y="0" width="112" height="112" rx="24" fill="url(#borderGradient)"/>
+    
+    <!-- Inner dark box -->
+    <rect x="8" y="8" width="96" height="96" rx="18" fill="#0a0a0c"/>
+    
+    <!-- Play triangle -->
+    <path d="M42 30v52l38-26z" fill="url(#playGradient)"/>
+  </g>
+</svg>

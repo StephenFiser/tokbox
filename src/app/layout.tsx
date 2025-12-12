@@ -7,11 +7,21 @@ export const metadata: Metadata = {
   title: "tok.box - AI Video Analyzer for TikTok Creators",
   description: "Get AI-powered feedback on your TikTok before you post. Viral potential score, hook analysis, and optimization tips.",
   keywords: ["TikTok", "video analyzer", "viral", "creator tools", "hook analysis"],
+  manifest: "/manifest.json",
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: '/favicon.svg',
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'tok.box',
   },
   openGraph: {
     title: "tok.box - Know If Your Video Will Go Viral",
@@ -25,7 +35,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#000000",
+  themeColor: "#a855f7",
 };
 
 export default function RootLayout({
