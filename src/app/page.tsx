@@ -33,7 +33,7 @@ interface AnalysisItem {
 }
 
 interface UsageData {
-  plan: 'free' | 'creator' | 'pro';
+  plan: 'free' | 'creator' | 'pro' | 'admin';
   analysesUsed: number;
   analysesLimit: number;
   periodLabel: string;
