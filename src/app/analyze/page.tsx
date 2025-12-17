@@ -2,9 +2,11 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useDropzone } from 'react-dropzone';
 import { useUser, PricingTable } from '@clerk/nextjs';
 import { Navbar } from '@/components/Navbar';
+import { SHOWCASE_EXAMPLES } from '@/data/showcase-examples';
 
 // Clean up any legacy IndexedDB data
 async function clearVideoFromIDB(): Promise<void> {
@@ -563,6 +565,37 @@ export default function AnalyzePage() {
                   <span>{feature.text}</span>
                 </div>
               ))}
+            </div>
+
+            {/* Example analyses preview */}
+            <div className="mt-12 max-w-sm mx-auto">
+              <p className="text-[13px] text-zinc-500 text-center mb-4">
+                See what you&apos;ll get →
+              </p>
+              <div className="space-y-2">
+                {SHOWCASE_EXAMPLES.slice(0, 3).map((example) => (
+                  <Link
+                    key={example.id}
+                    href={`/examples/${example.id}`}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all cursor-pointer"
+                  >
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                      example.grade.startsWith('A') ? 'bg-emerald-500/15 text-emerald-400' :
+                      example.grade.startsWith('B') ? 'bg-lime-500/15 text-lime-400' :
+                      example.grade.startsWith('C') ? 'bg-amber-500/15 text-amber-400' :
+                      example.grade.startsWith('D') ? 'bg-orange-500/15 text-orange-400' :
+                      'bg-red-500/15 text-red-400'
+                    }`}>
+                      {example.grade}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] text-white font-medium truncate">{example.title}</p>
+                      <p className="text-[11px] text-zinc-500 truncate">{example.subtitle}</p>
+                    </div>
+                    <ArrowRightIcon className="w-4 h-4 text-zinc-600 flex-shrink-0" />
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         )}
