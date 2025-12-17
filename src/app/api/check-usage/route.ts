@@ -16,6 +16,24 @@ export async function GET() {
     }
     
     const user = await currentUser();
+    const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+    
+    // Admin emails with unlimited access
+    const ADMIN_EMAILS = ['faincapital@gmail.com'];
+    const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
+    
+    if (isAdmin) {
+      return NextResponse.json({
+        limitReached: false,
+        plan: 'admin',
+        message: '',
+        analysesUsed: 0,
+        analysesLimit: 999999,
+        periodLabel: 'unlimited',
+        email: userEmail,
+      });
+    }
+    
     const hasPro = has?.({ plan: 'pro' }) || false;
     const hasCreator = has?.({ plan: 'creator' }) || false;
     const plan = hasPro ? 'pro' : hasCreator ? 'creator' : 'free';
@@ -41,12 +59,12 @@ export async function GET() {
       limitReached = monthlyCount >= analysesLimit;
       message = limitReached ? 'You\'ve reached your 30 analyses this month.' : '';
     } else if (plan === 'pro') {
-      const dailyCount = await getDailyAnalysisCount(userId);
-      analysesUsed = dailyCount;
-      analysesLimit = USAGE_LIMITS.pro.dailyAnalyses;
-      periodLabel = 'today';
-      limitReached = dailyCount >= analysesLimit;
-      message = limitReached ? 'You\'ve reached your 5 analyses for today. Come back tomorrow!' : '';
+      const monthlyCount = await getMonthlyAnalysisCount(userId);
+      analysesUsed = monthlyCount;
+      analysesLimit = USAGE_LIMITS.pro.monthlyAnalyses;
+      periodLabel = 'this month';
+      limitReached = monthlyCount >= analysesLimit;
+      message = limitReached ? 'You\'ve reached your 150 analyses this month.' : '';
     }
     
     return NextResponse.json({

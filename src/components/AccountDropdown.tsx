@@ -14,22 +14,24 @@ import {
 import { CheckBadgeIcon } from '@heroicons/react/24/solid';
 
 interface UsageData {
-  plan: 'free' | 'creator' | 'pro';
+  plan: 'free' | 'creator' | 'pro' | 'admin';
   analysesUsed: number;
   analysesLimit: number;
   periodLabel: string;
 }
 
-const PLAN_COLORS = {
+const PLAN_COLORS: Record<string, string> = {
   free: 'text-zinc-400 bg-zinc-800',
   creator: 'text-purple-300 bg-purple-500/20',
   pro: 'text-amber-300 bg-amber-500/20',
+  admin: 'text-emerald-300 bg-emerald-500/20',
 };
 
-const PLAN_LABELS = {
+const PLAN_LABELS: Record<string, string> = {
   free: 'Free',
   creator: 'Creator',
   pro: 'Pro',
+  admin: 'Admin',
 };
 
 export function AccountDropdown() {

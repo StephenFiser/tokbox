@@ -1292,53 +1292,64 @@ export async function POST(request: NextRequest) {
     const { userId, has } = await auth();
     const user = userId ? await currentUser() : null;
     
+    // Admin emails with unlimited access
+    const ADMIN_EMAILS = ['faincapital@gmail.com'];
+    const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+    const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
+    
     // Determine user's plan and usage
-    let userPlan: 'anonymous' | 'free' | 'creator' | 'pro' = 'anonymous';
+    let userPlan: 'anonymous' | 'free' | 'creator' | 'pro' | 'admin' = 'anonymous';
     let totalCount = 0;
     let monthlyCount = 0;
     let dailyCount = 0;
     let premiumCount = 0;
     
     if (userId) {
-      // Authenticated user - check their plan and usage
-      const hasPro = has?.({ plan: 'pro' }) || false;
-      const hasCreator = has?.({ plan: 'creator' }) || false;
-      userPlan = hasPro ? 'pro' : hasCreator ? 'creator' : 'free';
-      
-      totalCount = await getTotalAnalysisCount(userId);
-      monthlyCount = await getMonthlyAnalysisCount(userId);
-      dailyCount = await getDailyAnalysisCount(userId);
-      premiumCount = await getMonthlyPremiumCount(userId);
-      
-      // Enforce limits based on plan
-      if (userPlan === 'free' && totalCount >= USAGE_LIMITS.free.totalAnalyses) {
-        return NextResponse.json({ 
-          error: 'limit_reached',
-          message: 'You\'ve used your free analysis. Upgrade to continue!',
-          upgradeRequired: true,
-          currentPlan: 'free',
-          usage: { total: totalCount, limit: USAGE_LIMITS.free.totalAnalyses }
-        }, { status: 403 });
-      }
-      
-      if (userPlan === 'creator' && monthlyCount >= USAGE_LIMITS.creator.monthlyAnalyses) {
-        return NextResponse.json({ 
-          error: 'limit_reached',
-          message: 'You\'ve reached your 30 analyses this month. Upgrade to Pro for more!',
-          upgradeRequired: true,
-          currentPlan: 'creator',
-          usage: { monthly: monthlyCount, limit: USAGE_LIMITS.creator.monthlyAnalyses }
-        }, { status: 403 });
-      }
-      
-      if (userPlan === 'pro' && dailyCount >= USAGE_LIMITS.pro.dailyAnalyses) {
-        return NextResponse.json({ 
-          error: 'limit_reached',
-          message: 'You\'ve reached your 5 analyses for today. Come back tomorrow!',
-          upgradeRequired: false,
-          currentPlan: 'pro',
-          usage: { daily: dailyCount, limit: USAGE_LIMITS.pro.dailyAnalyses }
-        }, { status: 403 });
+      // Check if admin first - admins bypass all limits
+      if (isAdmin) {
+        userPlan = 'admin';
+        console.log(`Admin user ${userEmail} - bypassing all limits`);
+      } else {
+        // Regular authenticated user - check their plan and usage
+        const hasPro = has?.({ plan: 'pro' }) || false;
+        const hasCreator = has?.({ plan: 'creator' }) || false;
+        userPlan = hasPro ? 'pro' : hasCreator ? 'creator' : 'free';
+        
+        totalCount = await getTotalAnalysisCount(userId);
+        monthlyCount = await getMonthlyAnalysisCount(userId);
+        dailyCount = await getDailyAnalysisCount(userId);
+        premiumCount = await getMonthlyPremiumCount(userId);
+        
+        // Enforce limits based on plan
+        if (userPlan === 'free' && totalCount >= USAGE_LIMITS.free.totalAnalyses) {
+          return NextResponse.json({ 
+            error: 'limit_reached',
+            message: 'You\'ve used your free analysis. Upgrade to continue!',
+            upgradeRequired: true,
+            currentPlan: 'free',
+            usage: { total: totalCount, limit: USAGE_LIMITS.free.totalAnalyses }
+          }, { status: 403 });
+        }
+        
+        if (userPlan === 'creator' && monthlyCount >= USAGE_LIMITS.creator.monthlyAnalyses) {
+          return NextResponse.json({ 
+            error: 'limit_reached',
+            message: 'You\'ve reached your 30 analyses this month. Upgrade to Pro for more!',
+            upgradeRequired: true,
+            currentPlan: 'creator',
+            usage: { monthly: monthlyCount, limit: USAGE_LIMITS.creator.monthlyAnalyses }
+          }, { status: 403 });
+        }
+        
+        if (userPlan === 'pro' && monthlyCount >= USAGE_LIMITS.pro.monthlyAnalyses) {
+          return NextResponse.json({ 
+            error: 'limit_reached',
+            message: 'You\'ve reached your 150 analyses this month. Your limit resets next month!',
+            upgradeRequired: false,
+            currentPlan: 'pro',
+            usage: { monthly: monthlyCount, limit: USAGE_LIMITS.pro.monthlyAnalyses }
+          }, { status: 403 });
+        }
       }
     } else {
       // Anonymous user - check if IP has already used free analysis
@@ -1547,14 +1558,15 @@ export async function POST(request: NextRequest) {
       usage: {
         plan: userPlan,
         modelUsed: modelTier,
-        analysesUsed: userPlan === 'anonymous' ? 1 :
+        analysesUsed: userPlan === 'admin' ? 0 :
+                      userPlan === 'anonymous' ? 1 :
                       userPlan === 'free' ? totalCount + 1 : 
-                      userPlan === 'creator' ? monthlyCount + 1 : 
-                      dailyCount + 1,
-        analysesLimit: userPlan === 'anonymous' ? 1 :
+                      monthlyCount + 1, // Both creator and pro use monthly now
+        analysesLimit: userPlan === 'admin' ? 999999 :
+                       userPlan === 'anonymous' ? 1 :
                        userPlan === 'free' ? USAGE_LIMITS.free.totalAnalyses :
                        userPlan === 'creator' ? USAGE_LIMITS.creator.monthlyAnalyses :
-                       USAGE_LIMITS.pro.dailyAnalyses,
+                       USAGE_LIMITS.pro.monthlyAnalyses,
         isLastFreeAnalysis: userPlan === 'anonymous' || (userPlan === 'free' && totalCount === 0),
       },
     });

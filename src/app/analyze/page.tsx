@@ -227,7 +227,7 @@ function ConversionCard({ onAnalyzeAnother, isAnonymous }: { onAnalyzeAnother: (
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">POPULAR</span>
             </div>
             <span className="text-[20px] font-bold text-white">$19<span className="text-[13px] font-normal text-zinc-500">/mo</span></span>
-            <span className="text-[12px] text-zinc-500 mt-1">5/day, priority</span>
+            <span className="text-[12px] text-zinc-500 mt-1">150/month</span>
           </a>
         </div>
       )}
@@ -244,9 +244,9 @@ function ConversionCard({ onAnalyzeAnother, isAnonymous }: { onAnalyzeAnother: (
 
 // Upgrade prompt for when limit is reached
 function UpgradePrompt({ plan, usage }: { plan: string; usage: { analysesUsed: number; analysesLimit: number } }) {
-  const message = plan === 'creator' 
+  const message = plan === 'creator' || plan === 'pro'
     ? `You've used ${usage.analysesUsed} of ${usage.analysesLimit} analyses this month.`
-    : `You've used ${usage.analysesUsed} of ${usage.analysesLimit} analyses today.`;
+    : `You've used ${usage.analysesUsed} of ${usage.analysesLimit} analyses.`;
   
   return (
     <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.05] p-5 space-y-3">
@@ -501,6 +501,13 @@ export default function AnalyzePage() {
   const [restoredFromStorage, setRestoredFromStorage] = useState(false);
   const [needsUpgrade, setNeedsUpgrade] = useState(false);
   const [checkingUsage, setCheckingUsage] = useState(true);
+  const [usageInfo, setUsageInfo] = useState<{
+    plan: string;
+    message: string;
+    analysesUsed: number;
+    analysesLimit: number;
+    periodLabel: string;
+  } | null>(null);
 
   // Check if signed-in user has remaining analyses
   useEffect(() => {
@@ -522,6 +529,13 @@ export default function AnalyzePage() {
         if (response.ok) {
           const data = await response.json();
           setNeedsUpgrade(data.limitReached);
+          setUsageInfo({
+            plan: data.plan,
+            message: data.message,
+            analysesUsed: data.analysesUsed,
+            analysesLimit: data.analysesLimit,
+            periodLabel: data.periodLabel,
+          });
         }
       } catch {
         // If check fails, let them try - API will enforce
@@ -703,16 +717,53 @@ export default function AnalyzePage() {
                 <SparklesIcon className="w-8 h-8 text-purple-400" />
               </div>
               <h1 className="text-[1.5rem] font-semibold tracking-tight mb-2">
-                {isSignedIn ? "You've used your free analysis" : "Sign in to continue"}
+                {!isSignedIn 
+                  ? "Sign in to continue"
+                  : usageInfo?.plan === 'free'
+                  ? "You've used your free analysis"
+                  : usageInfo?.plan === 'creator'
+                  ? "Monthly limit reached"
+                  : usageInfo?.plan === 'pro'
+                  ? "Monthly limit reached"
+                  : "Limit reached"}
               </h1>
               <p className="text-zinc-400 text-[15px] max-w-sm mx-auto">
-                {isSignedIn 
+                {!isSignedIn 
+                  ? "Create an account to analyze more videos."
+                  : usageInfo?.plan === 'free'
                   ? "Upgrade to keep analyzing your videos and get more hooks, captions, and insights."
-                  : "Create an account to analyze more videos."}
+                  : usageInfo?.plan === 'creator'
+                  ? `You've used ${usageInfo?.analysesUsed}/${usageInfo?.analysesLimit} analyses this month. Upgrade to Pro for 150/month!`
+                  : usageInfo?.plan === 'pro'
+                  ? `You've used ${usageInfo?.analysesUsed}/${usageInfo?.analysesLimit} analyses this month. Your limit resets next month.`
+                  : "You've reached your limit for this period."}
               </p>
             </div>
             
-            {isSignedIn ? (
+            {!isSignedIn ? (
+              // Not signed in - show sign in button
+              <a
+                href="/sign-in?redirect_url=/analyze"
+                className="flex items-center justify-center gap-2 w-full py-4 text-center text-[15px] font-semibold rounded-xl btn-premium cursor-pointer"
+              >
+                Sign In
+                <ArrowRightIcon className="w-4 h-4" />
+              </a>
+            ) : usageInfo?.plan === 'pro' ? (
+              // Pro user at limit - just show message, no upgrade option
+              <div className="text-center">
+                <p className="text-zinc-500 text-[14px] mb-4">
+                  You&apos;re on our highest plan. Your limit resets at the start of next month.
+                </p>
+                <a
+                  href="/"
+                  className="inline-flex items-center gap-2 px-6 py-3 text-[14px] font-medium text-zinc-300 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl transition-colors"
+                >
+                  Back to Dashboard
+                </a>
+              </div>
+            ) : (
+              // Free or Creator - show pricing table to upgrade
               <div className="max-w-md mx-auto">
                 <PricingTable 
                   appearance={{
@@ -729,14 +780,6 @@ export default function AnalyzePage() {
                   }}
                 />
               </div>
-            ) : (
-              <a
-                href="/sign-in?redirect_url=/analyze"
-                className="flex items-center justify-center gap-2 w-full py-4 text-center text-[15px] font-semibold rounded-xl btn-premium cursor-pointer"
-              >
-                Sign In
-                <ArrowRightIcon className="w-4 h-4" />
-              </a>
             )}
           </div>
         )}
