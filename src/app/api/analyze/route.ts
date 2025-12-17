@@ -8,15 +8,12 @@ import {
   parseHookResponse,
 } from '@/lib/hooks';
 import {
-  db,
   initDb,
   trackAnalysis,
   getTotalAnalysisCount,
   getMonthlyAnalysisCount,
-  getDailyAnalysisCount,
   getMonthlyPremiumCount,
   USAGE_LIMITS,
-  PLAN_IDS,
 } from '@/lib/db';
 
 // Route segment config for App Router
@@ -1305,7 +1302,6 @@ export async function POST(request: NextRequest) {
     let userPlan: 'free' | 'creator' | 'pro' | 'admin' = 'free';
     let totalCount = 0;
     let monthlyCount = 0;
-    let dailyCount = 0;
     let premiumCount = 0;
     
     // Check if admin first - admins bypass all limits
@@ -1320,7 +1316,6 @@ export async function POST(request: NextRequest) {
       
       totalCount = await getTotalAnalysisCount(userId);
       monthlyCount = await getMonthlyAnalysisCount(userId);
-      dailyCount = await getDailyAnalysisCount(userId);
       premiumCount = await getMonthlyPremiumCount(userId);
       
       // Enforce limits based on plan
@@ -1398,7 +1393,7 @@ export async function POST(request: NextRequest) {
     const analysisId = generateId();
     const moodStrategy = mood ? MOOD_STRATEGIES[mood] : null;
     
-    console.log(`Starting analysis for ${userId || `anonymous (${clientIp})`} (${userPlan} plan, ${modelTier} tier)`);
+    console.log(`Starting analysis for user ${userId} (${userPlan} plan, ${modelTier} tier)`);
     console.log(`Video URL: ${videoUrl.substring(0, 80)}...`);
     
     // Call embedding service with S3 URL
@@ -1541,7 +1536,7 @@ export async function POST(request: NextRequest) {
       videoUrl: videoUrl || undefined,
     });
     
-    console.log(`Analysis complete in ${processingTime}ms for ${userId || 'anonymous'} (${mood || 'no mood'})`);
+    console.log(`Analysis complete in ${processingTime}ms for user ${userId} (${mood || 'no mood'})`);
     
     return NextResponse.json({
       ...responseData,
@@ -1550,15 +1545,13 @@ export async function POST(request: NextRequest) {
         plan: userPlan,
         modelUsed: modelTier,
         analysesUsed: userPlan === 'admin' ? 0 :
-                      userPlan === 'anonymous' ? 1 :
                       userPlan === 'free' ? totalCount + 1 : 
                       monthlyCount + 1, // Both creator and pro use monthly now
         analysesLimit: userPlan === 'admin' ? 999999 :
-                       userPlan === 'anonymous' ? 1 :
                        userPlan === 'free' ? USAGE_LIMITS.free.totalAnalyses :
                        userPlan === 'creator' ? USAGE_LIMITS.creator.monthlyAnalyses :
                        USAGE_LIMITS.pro.monthlyAnalyses,
-        isLastFreeAnalysis: userPlan === 'anonymous' || (userPlan === 'free' && totalCount === 0),
+        isLastFreeAnalysis: userPlan === 'free' && totalCount === 0,
       },
     });
     
