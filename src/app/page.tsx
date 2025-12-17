@@ -350,19 +350,18 @@ function LandingPage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] mb-8 backdrop-blur-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-soft" />
-            <span className="text-[13px] text-zinc-400 font-medium">AI-powered video analysis</span>
+            <span className="text-[13px] text-zinc-400 font-medium">See what your content is actually doing</span>
           </div>
 
           {/* Headline */}
           <h1 className="text-[2.75rem] sm:text-[3.25rem] font-semibold leading-[1.08] tracking-tight mb-6">
-            Know if your video
-            <span className="block mt-2 gradient-text">will go viral</span>
+            Find out why
+            <span className="block mt-2 gradient-text">before you post</span>
           </h1>
 
           {/* Subheadline */}
-          <p className="text-[17px] sm:text-lg text-zinc-400 mb-12 max-w-[340px] mx-auto leading-relaxed">
-            Get instant AI feedback before you post. 
-            <span className="text-zinc-300"> Fix the hook. Perfect the visuals. Go viral.</span>
+          <p className="text-[17px] sm:text-lg text-zinc-400 mb-12 max-w-[360px] mx-auto leading-relaxed">
+            AI analyzes your video and tells you exactly what&apos;s working, what&apos;s not, and how to fix it.
           </p>
 
           {/* CTA */}
@@ -381,23 +380,13 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Social Proof Bar */}
+      {/* Value Prop Bar */}
       <section className="relative z-10 px-6 py-10 border-y border-white/[0.04] bg-white/[0.01]">
-        <div className="max-w-lg mx-auto flex items-center justify-center gap-10 sm:gap-14 text-center">
-          <div>
-            <div className="text-2xl font-semibold tracking-tight">2.5K+</div>
-            <div className="text-[13px] text-zinc-500 mt-0.5">Videos analyzed</div>
-          </div>
-          <div className="w-px h-10 bg-white/[0.06]" />
-          <div>
-            <div className="text-2xl font-semibold tracking-tight">30s</div>
-            <div className="text-[13px] text-zinc-500 mt-0.5">Avg analysis time</div>
-          </div>
-          <div className="w-px h-10 bg-white/[0.06]" />
-          <div>
-            <div className="text-2xl font-semibold tracking-tight">4.8★</div>
-            <div className="text-[13px] text-zinc-500 mt-0.5">User rating</div>
-          </div>
+        <div className="max-w-lg mx-auto">
+          <p className="text-center text-[15px] text-zinc-400 leading-relaxed">
+            Generic TikTok advice fails because it ignores <span className="text-white font-medium">what you&apos;re actually trying to do</span>. 
+            tok.box analyzes your video based on <span className="text-white font-medium">your intent</span> — whether it&apos;s a thirst trap, tutorial, trend, or promo.
+          </p>
         </div>
       </section>
 
@@ -406,41 +395,41 @@ function LandingPage() {
         <div className="max-w-lg mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-[1.75rem] font-semibold tracking-tight mb-3">
-              Everything you need to win
+              Finally understand why
             </h2>
-            <p className="text-zinc-500">One upload. Complete analysis.</p>
+            <p className="text-zinc-500">See what worked. See what didn&apos;t. Know what to change.</p>
           </div>
 
           <div className="space-y-3">
             {[
               {
-                icon: ChartBarIcon,
-                title: 'Viral Score & Grade',
-                desc: 'A-F grade with detailed breakdown of hook, visual, and pacing',
+                icon: EyeIcon,
+                title: 'See what viewers see',
+                desc: 'AI describes your video frame-by-frame so you understand how it actually lands',
                 gradient: 'from-purple-500/10 via-purple-500/5 to-transparent',
                 iconBg: 'bg-purple-500/10',
                 iconColor: 'text-purple-400',
               },
               {
-                icon: LightBulbIcon,
-                title: '3 Hook Styles',
-                desc: 'Curiosity gap, pattern interrupt, and aspirational hooks',
+                icon: ChartBarIcon,
+                title: 'Know where you stand',
+                desc: 'Hook power, visual quality, pacing scores — plus an overall grade from A to F',
                 gradient: 'from-pink-500/10 via-pink-500/5 to-transparent',
                 iconBg: 'bg-pink-500/10',
                 iconColor: 'text-pink-400',
               },
               {
                 icon: BoltIcon,
-                title: 'Strengths & Fixes',
-                desc: 'What works and exactly what to improve for your video',
+                title: 'Get specific fixes',
+                desc: 'Not generic advice — changes tailored to your video and your content style',
                 gradient: 'from-orange-500/10 via-orange-500/5 to-transparent',
                 iconBg: 'bg-orange-500/10',
                 iconColor: 'text-orange-400',
               },
               {
-                icon: ChatBubbleBottomCenterTextIcon,
-                title: 'Caption Ideas',
-                desc: 'Ready-to-use captions that create intrigue',
+                icon: LightBulbIcon,
+                title: 'Walk away with hooks + captions',
+                desc: 'Three different text overlay options and captions you can copy and use',
                 gradient: 'from-blue-500/10 via-blue-500/5 to-transparent',
                 iconBg: 'bg-blue-500/10',
                 iconColor: 'text-blue-400',
@@ -468,9 +457,9 @@ function LandingPage() {
         <div className="max-w-lg mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-[1.75rem] font-semibold tracking-tight mb-3">
-              3 proven hook formulas
+              You get 3 hook options
             </h2>
-            <p className="text-zinc-500">Each tailored to your specific content</p>
+            <p className="text-zinc-500">Different angles. Same video. Pick what fits.</p>
           </div>
 
           <div className="space-y-4">
@@ -478,8 +467,8 @@ function LandingPage() {
               {
                 icon: LightBulbIcon,
                 name: 'Curiosity Gap',
-                desc: 'Creates an open loop they must close',
-                example: 'The part between frame 1 and 3...',
+                desc: 'Creates an open loop they have to close',
+                example: 'Nobody talks about the third one...',
                 border: 'border-purple-500/20 hover:border-purple-500/30',
                 bg: 'from-purple-500/[0.08] via-purple-500/[0.02] to-transparent',
                 text: 'text-purple-300',
@@ -488,8 +477,8 @@ function LandingPage() {
               {
                 icon: BoltIcon,
                 name: 'Pattern Interrupt',
-                desc: 'Breaks the scroll with the unexpected',
-                example: 'Yes, that\'s exactly what happened.',
+                desc: 'Stops the scroll with something unexpected',
+                example: 'Yeah. That actually happened.',
                 border: 'border-pink-500/20 hover:border-pink-500/30',
                 bg: 'from-pink-500/[0.08] via-pink-500/[0.02] to-transparent',
                 text: 'text-pink-300',
@@ -498,8 +487,8 @@ function LandingPage() {
               {
                 icon: StarIcon,
                 name: 'Aspirational',
-                desc: 'Makes them want that life',
-                example: 'This version of me hits different.',
+                desc: 'Makes them want what you have',
+                example: 'This version of me isn\'t going anywhere.',
                 border: 'border-orange-500/20 hover:border-orange-500/30',
                 bg: 'from-orange-500/[0.08] via-orange-500/[0.02] to-transparent',
                 text: 'text-orange-300',
@@ -531,14 +520,14 @@ function LandingPage() {
         <div className="max-w-lg mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-4">
-              <EyeIcon className="w-4 h-4 text-purple-400" />
+              <PlayCircleIcon className="w-4 h-4 text-purple-400" />
               <span className="text-[12px] text-purple-300 font-medium">Real Examples</span>
             </div>
             <h2 className="text-[1.75rem] font-semibold tracking-tight mb-3">
-              See what our AI sees
+              See why this worked. And why that didn&apos;t.
             </h2>
             <p className="text-zinc-500 max-w-sm mx-auto">
-              Real videos. Real analysis. Learn what works (and what doesn&apos;t) before you upload.
+              Real videos with real analysis. Watch the video, then see exactly what our AI caught.
             </p>
           </div>
 
@@ -611,9 +600,9 @@ function LandingPage() {
         <div className="max-w-lg mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-[1.75rem] font-semibold tracking-tight mb-3">
-              Dead simple
+              30 seconds to clarity
             </h2>
-            <p className="text-zinc-500">Upload. Analyze. Improve.</p>
+            <p className="text-zinc-500">No guessing. No wondering. Just answers.</p>
           </div>
 
           <div className="relative">
@@ -622,9 +611,9 @@ function LandingPage() {
 
             <div className="space-y-10">
               {[
-                { num: '1', title: 'Upload your video', desc: 'Drag, drop, or tap to select', gradient: 'from-purple-500 to-purple-600' },
-                { num: '2', title: 'AI analyzes everything', desc: 'Hook, visuals, pacing, potential', gradient: 'from-pink-500 to-pink-600' },
-                { num: '3', title: 'Get your playbook', desc: 'Scores, fixes, and ready-to-use hooks', gradient: 'from-orange-500 to-orange-600' },
+                { num: '1', title: 'Upload your video', desc: 'Any format, up to 100MB', gradient: 'from-purple-500 to-purple-600' },
+                { num: '2', title: 'Pick your vibe', desc: 'Thirst trap? Tutorial? Trend? We adjust the analysis.', gradient: 'from-pink-500 to-pink-600' },
+                { num: '3', title: 'See exactly what\'s working', desc: 'Scores, fixes, hooks, captions — ready to use', gradient: 'from-orange-500 to-orange-600' },
               ].map((step, i) => (
                 <div key={i} className="flex items-start gap-6 relative">
                   <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${step.gradient} flex items-center justify-center flex-shrink-0 shadow-lg border border-white/10 z-10`}>
@@ -646,9 +635,9 @@ function LandingPage() {
         <div className="max-w-lg mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-[1.75rem] font-semibold tracking-tight mb-3">
-              Simple pricing
+              Try it free. Keep what works.
             </h2>
-            <p className="text-zinc-500">Start free. Scale when ready.</p>
+            <p className="text-zinc-500">Your first analysis is on us. Seriously.</p>
           </div>
 
           <div className="space-y-4">
@@ -657,28 +646,28 @@ function LandingPage() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-semibold">Free</h3>
-                  <p className="text-[13px] text-zinc-500">Try it out</p>
+                  <p className="text-[13px] text-zinc-500">See if it&apos;s useful</p>
                 </div>
                 <div className="text-2xl font-semibold">$0</div>
               </div>
               <div className="flex flex-wrap gap-2 mb-5">
-                <span className="px-3 py-1.5 rounded-lg bg-white/[0.04] text-[12px] text-zinc-400 font-medium">1 analysis</span>
-                <span className="px-3 py-1.5 rounded-lg bg-white/[0.04] text-[12px] text-zinc-400 font-medium">All features</span>
+                <span className="px-3 py-1.5 rounded-lg bg-white/[0.04] text-[12px] text-zinc-400 font-medium">1 full analysis</span>
+                <span className="px-3 py-1.5 rounded-lg bg-white/[0.04] text-[12px] text-zinc-400 font-medium">All features included</span>
               </div>
               <Link href="/analyze" className="block w-full py-3 text-center text-[14px] font-semibold text-white bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.06] rounded-xl transition-all duration-200">
-                Start Free
+                Get Your Free Analysis
               </Link>
             </div>
 
             {/* Creator - Featured */}
             <div className="relative p-5 rounded-2xl bg-gradient-to-br from-purple-500/[0.12] via-purple-500/[0.06] to-transparent border border-purple-500/25 hover:border-purple-500/35 transition-all duration-300 overflow-hidden">
               <div className="absolute top-0 right-0 px-3 py-1.5 bg-purple-500 text-[11px] font-semibold rounded-bl-xl">
-                Popular
+                Most Popular
               </div>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-semibold">Creator</h3>
-                  <p className="text-[13px] text-zinc-500">For active creators</p>
+                  <p className="text-[13px] text-zinc-500">For creators who post regularly</p>
                 </div>
                 <div>
                   <span className="text-2xl font-semibold">$9</span>
@@ -686,9 +675,8 @@ function LandingPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 mb-5">
-                <span className="px-3 py-1.5 rounded-lg bg-purple-500/15 text-[12px] text-purple-300 font-medium">30/mo</span>
-                <span className="px-3 py-1.5 rounded-lg bg-purple-500/15 text-[12px] text-purple-300 font-medium">History</span>
-                <span className="px-3 py-1.5 rounded-lg bg-purple-500/15 text-[12px] text-purple-300 font-medium">Priority</span>
+                <span className="px-3 py-1.5 rounded-lg bg-purple-500/15 text-[12px] text-purple-300 font-medium">30 analyses/month</span>
+                <span className="px-3 py-1.5 rounded-lg bg-purple-500/15 text-[12px] text-purple-300 font-medium">Full history</span>
               </div>
               <Link href="/pricing" className="block w-full py-3 text-center text-[14px] font-semibold text-white btn-premium rounded-xl">
                 Get Started
@@ -700,7 +688,7 @@ function LandingPage() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-semibold">Pro</h3>
-                  <p className="text-[13px] text-zinc-500">Power users</p>
+                  <p className="text-[13px] text-zinc-500">For teams and agencies</p>
                 </div>
                 <div>
                   <span className="text-2xl font-semibold">$19</span>
@@ -708,8 +696,8 @@ function LandingPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 mb-5">
-                <span className="px-3 py-1.5 rounded-lg bg-white/[0.04] text-[12px] text-zinc-400 font-medium">5/day</span>
-                <span className="px-3 py-1.5 rounded-lg bg-white/[0.04] text-[12px] text-zinc-400 font-medium">Priority</span>
+                <span className="px-3 py-1.5 rounded-lg bg-white/[0.04] text-[12px] text-zinc-400 font-medium">150 analyses/month</span>
+                <span className="px-3 py-1.5 rounded-lg bg-white/[0.04] text-[12px] text-zinc-400 font-medium">Full history</span>
               </div>
               <Link href="/pricing" className="block w-full py-3 text-center text-[14px] font-semibold text-white bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.06] rounded-xl transition-all duration-200">
                 Get Started
@@ -723,17 +711,17 @@ function LandingPage() {
       <section className="relative z-10 px-6 py-24">
         <div className="max-w-lg mx-auto text-center">
           <h2 className="text-[1.875rem] sm:text-[2.25rem] font-semibold tracking-tight mb-5">
-            Stop guessing.
-            <span className="block gradient-text mt-1">Start knowing.</span>
+            Stop wondering
+            <span className="block gradient-text mt-1">if it&apos;s good enough.</span>
           </h2>
           <p className="text-zinc-400 mb-10 max-w-xs mx-auto text-[15px]">
-            One analysis could be the difference between 500 views and 500K.
+            You&apos;ll know exactly what to fix before anyone else sees it.
           </p>
           <Link
             href="/analyze"
             className="group inline-flex items-center justify-center gap-3 px-8 py-4 text-[16px] font-semibold text-white btn-premium rounded-2xl"
           >
-            Analyze Your First Video
+            Analyze Your Video Free
             <ArrowRightIcon className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
         </div>
