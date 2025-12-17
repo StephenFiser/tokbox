@@ -113,7 +113,7 @@ function Dashboard() {
   }, []);
 
   const firstName = user?.firstName || 'there';
-  const isPaid = usage?.plan === 'creator' || usage?.plan === 'pro';
+  const isPaid = usage?.plan === 'creator' || usage?.plan === 'pro' || usage?.plan === 'admin';
 
   return (
     <div className="min-h-screen bg-[#09090b]">
@@ -194,12 +194,12 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Usage Stats (for paid users) */}
-        {isPaid && usage && (
+        {/* Usage Stats (for paid users, but not admin) */}
+        {isPaid && usage && usage.plan !== 'admin' && (
           <div className="mb-10 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-[13px] font-semibold text-zinc-500 uppercase tracking-wider">
-                {usage.plan === 'pro' ? 'Today\'s Usage' : 'This Month'}
+                {usage.plan === 'pro' ? 'This Month' : 'This Month'}
               </h2>
               <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
                 usage.plan === 'pro' ? 'text-amber-300 bg-amber-500/20' : 'text-purple-300 bg-purple-500/20'
