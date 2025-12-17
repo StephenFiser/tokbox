@@ -65,13 +65,21 @@ export async function initDb() {
       viral_score REAL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       model_used TEXT DEFAULT 'premium',
-      results_json TEXT
+      results_json TEXT,
+      video_url TEXT
     )
   `);
   
   // Add results_json column if it doesn't exist (migration for existing tables)
   try {
     await db.execute(`ALTER TABLE analyses ADD COLUMN results_json TEXT`);
+  } catch {
+    // Column already exists
+  }
+  
+  // Add video_url column if it doesn't exist (migration for existing tables)
+  try {
+    await db.execute(`ALTER TABLE analyses ADD COLUMN video_url TEXT`);
   } catch {
     // Column already exists
   }
@@ -103,6 +111,7 @@ export async function trackAnalysis({
   viralScore,
   modelUsed,
   resultsJson,
+  videoUrl,
 }: {
   userId?: string | null;
   userEmail?: string | null;
@@ -113,13 +122,14 @@ export async function trackAnalysis({
   viralScore?: number;
   modelUsed: 'premium' | 'fast';
   resultsJson?: string;
+  videoUrl?: string;
 }): Promise<number> {
   const result = await db.execute({
     sql: `
-      INSERT INTO analyses (user_id, user_email, ip_address, mood, video_duration_seconds, grade, viral_score, model_used, results_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO analyses (user_id, user_email, ip_address, mood, video_duration_seconds, grade, viral_score, model_used, results_json, video_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
-    args: [userId || null, userEmail || null, ipAddress || null, mood, videoDurationSeconds || null, grade || null, viralScore || null, modelUsed, resultsJson || null],
+    args: [userId || null, userEmail || null, ipAddress || null, mood, videoDurationSeconds || null, grade || null, viralScore || null, modelUsed, resultsJson || null, videoUrl || null],
   });
   return Number(result.lastInsertRowid);
 }
@@ -128,7 +138,7 @@ export async function trackAnalysis({
 export async function getUserAnalysisHistory(userId: string, limit: number = 50) {
   const result = await db.execute({
     sql: `
-      SELECT id, mood, grade, viral_score, created_at, results_json
+      SELECT id, mood, grade, viral_score, created_at, results_json, video_url
       FROM analyses 
       WHERE user_id = ?
       ORDER BY created_at DESC

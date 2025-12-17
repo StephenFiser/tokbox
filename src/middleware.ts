@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   '/pricing',
   '/privacy',
   '/terms',
+  '/examples(.*)', // Public - showcase examples for marketing
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/analyze', // Public but we check auth in the route itself

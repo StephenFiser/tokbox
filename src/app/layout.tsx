@@ -66,12 +66,12 @@ export default function RootLayout({
         },
       }}
     >
-      <html lang="en">
+    <html lang="en">
         <body className="min-h-screen bg-black text-white antialiased">
-          {children}
+        {children}
           <Analytics />
-        </body>
-      </html>
+      </body>
+    </html>
     </ClerkProvider>
   );
 }

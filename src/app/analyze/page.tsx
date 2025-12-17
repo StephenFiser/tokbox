@@ -55,6 +55,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon, SparklesIcon as SparklesSolid, PlayIcon } from '@heroicons/react/24/solid';
 import { HookSet, HookType, HOOK_TYPE_INFO } from '@/lib/hooks';
+import { CopyButton, GradeDisplay, ScoreRow, HookTabs, GRADE_COLORS } from '@/components/AnalysisResults';
 
 // Mood options for creators to select
 const MOOD_OPTIONS = [
@@ -315,180 +316,6 @@ interface AnalysisResult {
   };
 }
 
-function CopyButton({ text, size = 'md' }: { text: string; size?: 'sm' | 'md' }) {
-  const [copied, setCopied] = useState(false);
-  
-  const handleCopy = () => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  
-  const sizeClasses = size === 'sm' ? 'w-9 h-9' : 'w-10 h-10';
-  const iconClasses = size === 'sm' ? 'w-4 h-4' : 'w-4 h-4';
-  
-  return (
-    <button
-      onClick={handleCopy}
-      className={`${sizeClasses} rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] flex items-center justify-center transition-all duration-200 active:scale-95`}
-    >
-      {copied ? (
-        <CheckIcon className={`${iconClasses} text-emerald-400`} />
-      ) : (
-        <ClipboardIcon className={`${iconClasses} text-zinc-500`} />
-      )}
-    </button>
-  );
-}
-
-function GradeDisplay({ grade, color, potential, summary }: { 
-  grade: string; 
-  color: string; 
-  potential: number;
-  summary: string;
-}) {
-  return (
-    <div className="relative p-8 rounded-3xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] border border-white/[0.08] overflow-hidden">
-      {/* Refined glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-purple-500/15 rounded-full blur-[60px]" />
-      
-      <div className="relative flex flex-col items-center text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06] mb-6">
-          <SparklesSolid className="w-3.5 h-3.5 text-purple-400" />
-          <span className="text-[13px] text-zinc-400 font-medium">Analysis Complete</span>
-        </div>
-        
-        <div className={`flex items-center justify-center w-32 h-32 rounded-[32px] text-[3.5rem] font-semibold mb-5 shadow-2xl border border-white/10 ${color}`}>
-          {grade}
-        </div>
-        
-        <div className="text-lg font-medium mb-2">
-          Viral Potential: <span className="text-purple-400 tabular-nums">{potential}/10</span>
-        </div>
-        
-        <p className="text-[15px] text-zinc-400 max-w-sm leading-relaxed">{summary}</p>
-      </div>
-    </div>
-  );
-}
-
-function ScoreRow({ icon: Icon, label, score, feedback }: { 
-  icon: React.ComponentType<{ className?: string }>;
-  label: string; 
-  score: number; 
-  feedback: string;
-}) {
-  const getBarColor = (s: number) => {
-    if (s >= 8) return 'bg-gradient-to-r from-emerald-500 to-emerald-400';
-    if (s >= 6) return 'bg-gradient-to-r from-amber-500 to-yellow-400';
-    if (s >= 4) return 'bg-gradient-to-r from-orange-500 to-orange-400';
-    return 'bg-gradient-to-r from-red-500 to-red-400';
-  };
-
-  const getScoreColor = (s: number) => {
-    if (s >= 8) return 'text-emerald-400';
-    if (s >= 6) return 'text-amber-400';
-    if (s >= 4) return 'text-orange-400';
-    return 'text-red-400';
-  };
-  
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <Icon className="w-5 h-5 text-zinc-400" />
-          <span className="font-medium text-[15px]">{label}</span>
-        </div>
-        <span className={`text-lg font-semibold tabular-nums ${getScoreColor(score)}`}>
-          {score}<span className="text-zinc-600">/10</span>
-        </span>
-      </div>
-      <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
-        <div 
-          className={`h-full rounded-full transition-all duration-700 ease-out ${getBarColor(score)}`}
-          style={{ width: `${score * 10}%` }}
-        />
-      </div>
-      <p className="text-[14px] text-zinc-500 leading-relaxed">{feedback}</p>
-    </div>
-  );
-}
-
-const HOOK_ICONS = {
-  lightbulb: LightBulbIcon,
-  bolt: BoltIcon,
-  sparkles: SparklesIcon,
-} as const;
-
-function HookTabs({ hooks, recommendedType }: { hooks: HookSet; recommendedType: HookType }) {
-  const [activeTab, setActiveTab] = useState<HookType>(recommendedType || 'curiosity_gap');
-  
-  const tabs: { type: HookType; hooks: { text: string }[] }[] = [
-    { type: 'curiosity_gap', hooks: hooks.curiosityGap },
-    { type: 'pattern_interrupt', hooks: hooks.patternInterrupt },
-    { type: 'aspirational', hooks: hooks.aspirational },
-  ];
-  
-  const activeHooks = tabs.find(t => t.type === activeTab)?.hooks || [];
-  const info = HOOK_TYPE_INFO[activeTab];
-  const ActiveIcon = HOOK_ICONS[info.iconName];
-  
-  return (
-    <div className="space-y-4">
-      {/* Tab buttons */}
-      <div className="flex gap-2 overflow-x-auto pt-4 pb-1 scrollbar-hide -mx-1 px-1">
-        {tabs.map(({ type }) => {
-          const tabInfo = HOOK_TYPE_INFO[type];
-          const TabIcon = HOOK_ICONS[tabInfo.iconName];
-          const isActive = type === activeTab;
-          const isRecommended = type === recommendedType;
-          
-          return (
-            <button
-              key={type}
-              onClick={() => setActiveTab(type)}
-              className={`relative flex items-center gap-2 px-4 py-3 rounded-xl whitespace-nowrap transition-all duration-200 font-medium text-[14px] cursor-pointer ${
-                isActive 
-                  ? 'bg-white/[0.08] text-white border border-white/[0.12]' 
-                  : 'bg-white/[0.02] text-zinc-400 border border-transparent hover:bg-white/[0.04]'
-              }`}
-            >
-              <TabIcon className={`w-4 h-4 ${isActive ? tabInfo.color : ''}`} />
-              <span>{tabInfo.name}</span>
-              {isRecommended && (
-                <span className="absolute -top-2 right-3 px-2 py-0.5 bg-purple-500 rounded text-[10px] font-bold text-white shadow-lg">
-                  BEST
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-      
-      {/* Hook content */}
-      <div className={`p-5 rounded-2xl border ${info.bgColor} ${info.borderColor}`}>
-        <p className="text-[13px] text-zinc-500 mb-4">{info.description}</p>
-        
-        {activeHooks.length > 0 ? (
-          <div className="space-y-2.5">
-            {activeHooks.map((hook, i) => (
-              <div 
-                key={i} 
-                className="flex items-center justify-between gap-3 p-4 rounded-xl bg-black/30 border border-white/[0.04]"
-              >
-                <p className="text-[15px] text-white flex-1 leading-snug">{hook.text}</p>
-                <CopyButton text={hook.text} size="sm" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-[14px] text-zinc-500 italic">No hooks generated for this style</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function AnalyzePage() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useUser();
@@ -515,15 +342,12 @@ export default function AnalyzePage() {
       if (!isLoaded) return;
       
       if (!isSignedIn) {
-        // Anonymous user - check localStorage
-        const freeUsed = localStorage.getItem('tokbox_free_used');
-        setNeedsUpgrade(!!freeUsed);
+        // Not signed in - they need to register first
         setCheckingUsage(false);
         return;
       }
       
-      // For signed-in users, we'll do a lightweight check
-      // The API will enforce limits anyway, but we show UI proactively
+      // For signed-in users, check their usage
       try {
         const response = await fetch('/api/check-usage');
         if (response.ok) {
@@ -574,15 +398,7 @@ export default function AnalyzePage() {
   });
 
   const analyzeVideo = async () => {
-    if (!file) return;
-    
-    // Check localStorage for free analysis usage (client-side check)
-    const freeUsed = localStorage.getItem('tokbox_free_used');
-    if (freeUsed && !isSignedIn) {
-      // Redirect to sign-in if they've already used their free analysis
-      router.push('/sign-in?redirect_url=/analyze');
-      return;
-    }
+    if (!file || !isSignedIn) return;
 
     setAnalyzing(true);
     setError(null);
@@ -649,11 +465,6 @@ export default function AnalyzePage() {
         throw new Error(data.error || 'Analysis failed');
       }
 
-      // Mark free analysis as used in localStorage (for client-side check)
-      if (!isSignedIn) {
-        localStorage.setItem('tokbox_free_used', 'true');
-      }
-      
       // Include the selected mood in the result
       setResult({ ...data, selectedMood });
     } catch (err) {
@@ -709,17 +520,62 @@ export default function AnalyzePage() {
           </div>
         )}
         
-        {/* Upgrade Required Section */}
-        {!checkingUsage && needsUpgrade && !result && (
+        {/* Registration Prompt - for users who haven't signed in */}
+        {!checkingUsage && !isSignedIn && !result && (
           <div className="animate-fade-in">
             <div className="text-center mb-8">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center mx-auto mb-5">
                 <SparklesIcon className="w-8 h-8 text-purple-400" />
               </div>
               <h1 className="text-[1.5rem] font-semibold tracking-tight mb-2">
-                {!isSignedIn 
-                  ? "Sign in to continue"
-                  : usageInfo?.plan === 'free'
+                Get Your Free Video Analysis
+              </h1>
+              <p className="text-zinc-400 text-[15px] max-w-sm mx-auto">
+                Create a free account to analyze your video and get AI-powered hooks, captions, and viral potential scores.
+              </p>
+            </div>
+            
+            <div className="space-y-3 max-w-sm mx-auto">
+              <a
+                href="/sign-up?redirect_url=/analyze"
+                className="flex items-center justify-center gap-2 w-full py-4 text-center text-[15px] font-semibold rounded-xl btn-premium cursor-pointer"
+              >
+                Create Free Account
+                <ArrowRightIcon className="w-4 h-4" />
+              </a>
+              <a
+                href="/sign-in?redirect_url=/analyze"
+                className="flex items-center justify-center gap-2 w-full py-3 text-center text-[14px] font-medium text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl transition-colors cursor-pointer"
+              >
+                Already have an account? Sign in
+              </a>
+            </div>
+            
+            {/* Feature highlights */}
+            <div className="mt-10 grid gap-3 max-w-sm mx-auto">
+              {[
+                { icon: EyeIcon, text: 'AI analyzes your video frame-by-frame' },
+                { icon: SparklesIcon, text: 'Get 3 custom hook styles for your content' },
+                { icon: CheckCircleIcon, text: 'First analysis is completely free' },
+              ].map((feature, i) => (
+                <div key={i} className="flex items-center gap-3 text-[13px] text-zinc-500">
+                  <feature.icon className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                  <span>{feature.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Upgrade Required Section - for signed-in users who've hit their limit */}
+        {!checkingUsage && isSignedIn && needsUpgrade && !result && (
+          <div className="animate-fade-in">
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center mx-auto mb-5">
+                <SparklesIcon className="w-8 h-8 text-purple-400" />
+              </div>
+              <h1 className="text-[1.5rem] font-semibold tracking-tight mb-2">
+                {usageInfo?.plan === 'free'
                   ? "You've used your free analysis"
                   : usageInfo?.plan === 'creator'
                   ? "Monthly limit reached"
@@ -728,9 +584,7 @@ export default function AnalyzePage() {
                   : "Limit reached"}
               </h1>
               <p className="text-zinc-400 text-[15px] max-w-sm mx-auto">
-                {!isSignedIn 
-                  ? "Create an account to analyze more videos."
-                  : usageInfo?.plan === 'free'
+                {usageInfo?.plan === 'free'
                   ? "Upgrade to keep analyzing your videos and get more hooks, captions, and insights."
                   : usageInfo?.plan === 'creator'
                   ? `You've used ${usageInfo?.analysesUsed}/${usageInfo?.analysesLimit} analyses this month. Upgrade to Pro for 150/month!`
@@ -740,16 +594,7 @@ export default function AnalyzePage() {
               </p>
             </div>
             
-            {!isSignedIn ? (
-              // Not signed in - show sign in button
-              <a
-                href="/sign-in?redirect_url=/analyze"
-                className="flex items-center justify-center gap-2 w-full py-4 text-center text-[15px] font-semibold rounded-xl btn-premium cursor-pointer"
-              >
-                Sign In
-                <ArrowRightIcon className="w-4 h-4" />
-              </a>
-            ) : usageInfo?.plan === 'pro' ? (
+            {usageInfo?.plan === 'pro' ? (
               // Pro user at limit - just show message, no upgrade option
               <div className="text-center">
                 <p className="text-zinc-500 text-[14px] mb-4">
@@ -784,8 +629,8 @@ export default function AnalyzePage() {
           </div>
         )}
         
-        {/* Upload Section */}
-        {!checkingUsage && !needsUpgrade && !result && (
+        {/* Upload Section - only for signed-in users who can analyze */}
+        {!checkingUsage && isSignedIn && !needsUpgrade && !result && (
           <>
             {!file ? (
               <div className="animate-fade-in">

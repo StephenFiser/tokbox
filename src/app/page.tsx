@@ -18,7 +18,10 @@ import {
   ClockIcon,
   ArrowTrendingUpIcon,
   CreditCardIcon,
+  PlayCircleIcon,
+  EyeIcon,
 } from '@heroicons/react/24/outline';
+import { SHOWCASE_EXAMPLES } from '@/data/showcase-examples';
 
 interface AnalysisItem {
   id: number;
@@ -523,8 +526,88 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Real Examples Showcase */}
+      <section id="examples" className="relative z-10 px-6 py-20">
+        <div className="max-w-lg mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-4">
+              <EyeIcon className="w-4 h-4 text-purple-400" />
+              <span className="text-[12px] text-purple-300 font-medium">Real Examples</span>
+            </div>
+            <h2 className="text-[1.75rem] font-semibold tracking-tight mb-3">
+              See what our AI sees
+            </h2>
+            <p className="text-zinc-500 max-w-sm mx-auto">
+              Real videos. Real analysis. Learn what works (and what doesn&apos;t) before you upload.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {SHOWCASE_EXAMPLES.map((example) => (
+              <Link
+                key={example.id}
+                href={`/examples/${example.id}`}
+                className="group block p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-300 cursor-pointer"
+              >
+                <div className="flex items-start gap-4">
+                  {/* Grade Badge */}
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0 ${
+                    example.grade.startsWith('A') ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' :
+                    example.grade.startsWith('B') ? 'bg-lime-500/15 text-lime-400 border border-lime-500/20' :
+                    example.grade.startsWith('C') ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20' :
+                    example.grade.startsWith('D') ? 'bg-orange-500/15 text-orange-400 border border-orange-500/20' :
+                    'bg-red-500/15 text-red-400 border border-red-500/20'
+                  }`}>
+                    {example.grade}
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-[15px] text-white group-hover:text-purple-300 transition-colors truncate">
+                        {example.title}
+                      </h3>
+                    </div>
+                    <p className="text-[13px] text-zinc-500 mb-2 line-clamp-1">
+                      {example.subtitle}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[11px] px-2 py-1 rounded-md bg-white/[0.04] text-zinc-400 font-medium">
+                        {example.mood.charAt(0).toUpperCase() + example.mood.slice(1)}
+                      </span>
+                      <span className="text-[11px] text-zinc-600 flex items-center gap-1">
+                        <ArrowTrendingUpIcon className="w-3 h-3" />
+                        {example.viralScore}/10
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Arrow */}
+                  <div className="flex items-center self-center">
+                    <ArrowRightIcon className="w-4 h-4 text-zinc-600 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-8">
+            <p className="text-[14px] text-zinc-500 mb-4">
+              Want to see how <span className="text-zinc-300">your</span> video stacks up?
+            </p>
+            <Link
+              href="/analyze"
+              className="inline-flex items-center gap-2 px-6 py-3 text-[14px] font-semibold text-white btn-premium rounded-xl"
+            >
+              <SparklesIcon className="w-4 h-4" />
+              Analyze Your Video Free
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works */}
-      <section className="relative z-10 px-6 py-20">
+      <section className="relative z-10 px-6 py-20 bg-gradient-to-b from-transparent via-white/[0.015] to-transparent">
         <div className="max-w-lg mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-[1.75rem] font-semibold tracking-tight mb-3">
@@ -677,14 +760,11 @@ function LandingPage() {
 export default function HomePage() {
   const { isSignedIn, isLoaded } = useUser();
   
-  // Show loading state while Clerk loads
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-[#09090b] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+  // Show landing page immediately while Clerk loads (or if not signed in)
+  // Only show Dashboard once we know the user is signed in
+  if (!isLoaded || !isSignedIn) {
+    return <LandingPage />;
   }
   
-  return isSignedIn ? <Dashboard /> : <LandingPage />;
+  return <Dashboard />;
 }

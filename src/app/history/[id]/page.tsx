@@ -1,10 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { Navbar, TokBoxLogo } from '@/components/Navbar';
+import { 
+  GradeDisplay, 
+  ScoreRow, 
+  HookTabs, 
+  CopyButton,
+  GRADE_COLORS,
+  type AnalysisResultData
+} from '@/components/AnalysisResults';
 import { 
   ArrowLeftIcon,
   SparklesIcon,
@@ -13,8 +21,11 @@ import {
   EyeIcon,
   LightBulbIcon,
   BoltIcon,
-  ClipboardIcon,
+  ChatBubbleLeftIcon,
+  ChatBubbleBottomCenterTextIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
 
 const MOOD_LABELS: Record<string, string> = {
   thirst: 'Thirst Trap',
@@ -39,46 +50,6 @@ const MOOD_LABELS: Record<string, string> = {
   unspecified: 'General',
 };
 
-const GRADE_COLORS: Record<string, { text: string; bg: string }> = {
-  'A+': { text: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-500/5' },
-  'A': { text: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-500/5' },
-  'A-': { text: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-500/5' },
-  'B+': { text: 'text-lime-400', bg: 'from-lime-500/20 to-lime-500/5' },
-  'B': { text: 'text-lime-400', bg: 'from-lime-500/20 to-lime-500/5' },
-  'B-': { text: 'text-yellow-400', bg: 'from-yellow-500/20 to-yellow-500/5' },
-  'C+': { text: 'text-yellow-400', bg: 'from-yellow-500/20 to-yellow-500/5' },
-  'C': { text: 'text-amber-400', bg: 'from-amber-500/20 to-amber-500/5' },
-  'C-': { text: 'text-amber-400', bg: 'from-amber-500/20 to-amber-500/5' },
-  'D+': { text: 'text-orange-400', bg: 'from-orange-500/20 to-orange-500/5' },
-  'D': { text: 'text-orange-400', bg: 'from-orange-500/20 to-orange-500/5' },
-  'D-': { text: 'text-red-400', bg: 'from-red-500/20 to-red-500/5' },
-  'F': { text: 'text-red-400', bg: 'from-red-500/20 to-red-500/5' },
-};
-
-interface AnalysisResult {
-  grade: string;
-  gradeColor: string;
-  viralPotential: number;
-  summary: string;
-  contentDescription: string;
-  scores: {
-    hook: { score: number; label: string; feedback: string };
-    visual: { score: number; label: string; feedback: string };
-    pacing: { score: number; label: string; feedback: string };
-  };
-  strengths: string[];
-  improvements: string[];
-  theOneThing?: string;
-  advancedInsight?: string;
-  hooks: Record<string, { text: string; why: string }[]>;
-  recommendedHookType: string;
-  captions: string[];
-  moodStrategy?: {
-    name: string;
-    whatMatters: string[];
-  };
-}
-
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString('en-US', { 
     weekday: 'long',
@@ -96,16 +67,15 @@ interface AnalysisData {
   results_json?: string;
   grade?: string;
   viral_score?: number;
+  video_url?: string;
 }
 
 export default function HistoryDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const { user, isLoaded } = useUser();
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
-  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [result, setResult] = useState<AnalysisResultData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (isLoaded && user && params.id) {
@@ -125,12 +95,6 @@ export default function HistoryDetailPage() {
       setLoading(false);
     }
   }, [isLoaded, user, params.id]);
-
-  const copyToClipboard = (text: string, index: number) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
-  };
 
   if (!isLoaded || loading) {
     return (
@@ -160,199 +124,266 @@ export default function HistoryDetailPage() {
 
   // Get grade from full results or from basic analysis data
   const grade = result?.grade || analysis.grade || '—';
-  const viralPotential = result?.viralPotential || analysis.viral_score;
-  const gradeStyle = GRADE_COLORS[grade] || { text: 'text-zinc-400', bg: 'from-zinc-500/20 to-zinc-500/5' };
+  const viralPotential = result?.viralPotential || analysis.viral_score || 0;
+  const gradeColor = GRADE_COLORS[grade] || 'bg-gradient-to-br from-zinc-500 to-zinc-600 text-white';
   const hasFullResults = !!result;
 
   return (
     <div className="min-h-screen bg-[#09090b]">
-      {/* Ambient background */}
+      {/* Ambient background - same as analyze page */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-purple-500/[0.03] rounded-full blur-[100px]" />
+        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-purple-500/[0.04] rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-pink-500/[0.03] rounded-full blur-[100px]" />
       </div>
 
-      <Navbar showPricing={false} />
+      <Navbar sticky showPricing={false} />
 
-      <main className="relative z-10 max-w-2xl mx-auto px-6 py-8">
+      <main className="relative z-10 max-w-2xl mx-auto px-6 py-8 space-y-6">
         {/* Back link */}
         <Link
           href="/history"
-          className="inline-flex items-center gap-2 text-[14px] text-zinc-500 hover:text-white transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-[14px] text-zinc-500 hover:text-white transition-colors cursor-pointer"
         >
           <ArrowLeftIcon className="w-4 h-4" />
           Back to history
         </Link>
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-[13px] text-zinc-500">
-              {MOOD_LABELS[analysis.mood] || analysis.mood}
-            </span>
-            <span className="text-zinc-700">•</span>
-            <span className="text-[13px] text-zinc-500">
-              {formatDate(analysis.created_at)}
-            </span>
-          </div>
+        {/* Mood & Date badge - matching analyze page style */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-[12px] text-purple-300 font-medium">
+            {MOOD_LABELS[analysis.mood] || analysis.mood}
+          </span>
+          <span className="text-[12px] text-zinc-500">
+            {formatDate(analysis.created_at)}
+          </span>
         </div>
 
-        {/* Grade Card */}
-        <div className={`p-6 rounded-2xl bg-gradient-to-b ${gradeStyle.bg} border border-white/[0.06] mb-6`}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <span className={`text-5xl font-bold ${gradeStyle.text}`}>{grade}</span>
-              {viralPotential && (
-                <p className="text-[14px] text-zinc-400 mt-1">Viral Potential: {viralPotential}/10</p>
-              )}
+        {/* Video Player - if video URL exists */}
+        {analysis.video_url && (
+          <div className="mb-6">
+            <div className="aspect-[9/16] max-w-xs mx-auto rounded-2xl overflow-hidden bg-zinc-900 border border-white/[0.06]">
+              <video 
+                src={analysis.video_url} 
+                controls 
+                playsInline
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
-          {hasFullResults ? (
-            <p className="text-[15px] text-zinc-300 leading-relaxed">{result.summary}</p>
-          ) : (
-            <p className="text-[15px] text-zinc-400 leading-relaxed italic">
-              Full analysis details not available for this older analysis.
-            </p>
-          )}
-        </div>
+        )}
+
+        {/* Grade Display - using shared component */}
+        <GradeDisplay 
+          grade={grade}
+          color={gradeColor}
+          potential={viralPotential}
+          summary={result?.summary || (hasFullResults ? '' : 'Full analysis details not available for this older analysis.')}
+        />
 
         {/* Limited results notice for old analyses */}
         {!hasFullResults && (
-          <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-6">
+          <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20">
             <p className="text-[14px] text-amber-200">
               This analysis was done before we started saving detailed results. 
               Only the grade and score are available. Run a new analysis to see full details!
             </p>
+            <Link
+              href="/analyze"
+              className="inline-flex items-center gap-2 mt-4 px-4 py-2 text-[13px] font-medium text-white btn-premium rounded-lg cursor-pointer"
+            >
+              <SparklesIcon className="w-4 h-4" />
+              Analyze New Video
+            </Link>
           </div>
         )}
 
-        {/* Full results section - only show if we have full results */}
-        {hasFullResults && (
+        {/* Full results section - matching analyze page exactly */}
+        {hasFullResults && result && (
           <>
-            {/* What AI Sees */}
-            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] mb-6">
-              <div className="flex items-center gap-2.5 mb-3">
+            {/* Content Description */}
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+              <div className="flex items-center gap-2 mb-3">
                 <EyeIcon className="w-4 h-4 text-zinc-500" />
-                <h3 className="text-[13px] font-medium text-zinc-500 uppercase tracking-wide">What we see</h3>
+                <span className="text-[13px] font-medium text-zinc-500 uppercase tracking-wider">What we see</span>
               </div>
               <p className="text-[15px] text-zinc-300 leading-relaxed">{result.contentDescription}</p>
             </div>
 
-            {/* Scores */}
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              {Object.entries(result.scores).map(([key, score]) => (
-                <div key={key} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                  <div className="text-2xl font-bold text-white mb-1">{score.score}/10</div>
-                  <div className="text-[12px] text-zinc-500">{score.label}</div>
+            {/* Existing Text Overlay - if present */}
+            {(result as AnalysisResultData & { existingTextOverlay?: string; existingTextAssessment?: string }).existingTextOverlay && (
+              <div className="p-5 rounded-2xl bg-indigo-500/[0.05] border border-indigo-500/20">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <ChatBubbleLeftIcon className="w-4 h-4 text-indigo-400" />
+                  <h3 className="text-[13px] font-medium text-indigo-400 uppercase tracking-wide">Your Current Text</h3>
                 </div>
-              ))}
+                <p className="text-[15px] text-white font-medium mb-3">
+                  {(result as AnalysisResultData & { existingTextOverlay?: string }).existingTextOverlay}
+                </p>
+                {(result as AnalysisResultData & { existingTextAssessment?: string }).existingTextAssessment && (
+                  <p className="text-[14px] text-zinc-400 leading-relaxed">
+                    {(result as AnalysisResultData & { existingTextAssessment?: string }).existingTextAssessment}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Score Breakdown - using shared ScoreRow component */}
+            <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-6">
+              <h3 className="font-semibold text-[15px]">Score Breakdown</h3>
+              <ScoreRow 
+                icon={LightBulbIcon}
+                label="Hook Power" 
+                score={result.scores.hook.score} 
+                feedback={result.scores.hook.feedback}
+              />
+              <div className="border-t border-white/[0.04]" />
+              <ScoreRow 
+                icon={EyeIcon}
+                label="Visual Quality" 
+                score={result.scores.visual.score} 
+                feedback={result.scores.visual.feedback}
+              />
+              <div className="border-t border-white/[0.04]" />
+              <ScoreRow 
+                icon={BoltIcon}
+                label="Execution" 
+                score={result.scores.pacing.score} 
+                feedback={result.scores.pacing.feedback}
+              />
             </div>
 
-            {/* Strengths & Improvements */}
-            <div className="grid gap-4 sm:grid-cols-2 mb-6">
-              {result.strengths && result.strengths.length > 0 && (
-                <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-                  <h3 className="text-[13px] font-medium text-emerald-400 uppercase tracking-wide mb-3">
-                    ✓ What&apos;s Working
-                  </h3>
-                  <ul className="space-y-2">
-                    {result.strengths.map((item, i) => (
-                      <li key={i} className="text-[14px] text-zinc-300 flex items-start gap-2">
-                        <CheckIcon className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              {result.improvements && result.improvements.length > 0 && (
-                <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-                  <h3 className="text-[13px] font-medium text-amber-400 uppercase tracking-wide mb-3">
-                    → To Improve
-                  </h3>
-                  <ul className="space-y-2">
-                    {result.improvements.map((item, i) => (
-                      <li key={i} className="text-[14px] text-zinc-300 flex items-start gap-2">
-                        <ArrowRightIcon className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {/* Hooks */}
-            {result.hooks && Object.keys(result.hooks).length > 0 && (
-              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] mb-6">
-                <h3 className="text-[13px] font-medium text-zinc-500 uppercase tracking-wide mb-4">
-                  Suggested Hooks
+            {/* What's Working - matching analyze page exactly */}
+            {result.strengths && result.strengths.length > 0 && (
+              <div className="p-6 rounded-2xl bg-emerald-500/[0.04] border border-emerald-500/15">
+                <h3 className="font-semibold text-emerald-400 mb-4 flex items-center gap-2.5 text-[15px]">
+                  <span className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+                    <CheckCircleIcon className="w-4 h-4" />
+                  </span>
+                  What&apos;s Working
                 </h3>
-                <div className="space-y-4">
-                  {Object.entries(result.hooks).map(([type, hooks]) => (
-                    <div key={type}>
-                      <div className="flex items-center gap-2 mb-2">
-                        {type === 'curiosity' && <LightBulbIcon className="w-4 h-4 text-yellow-400" />}
-                        {type === 'pattern_interrupt' && <BoltIcon className="w-4 h-4 text-blue-400" />}
-                        {type === 'aspirational' && <SparklesIcon className="w-4 h-4 text-purple-400" />}
-                        <span className="text-[13px] font-medium text-zinc-400 capitalize">
-                          {type.replace('_', ' ')}
-                        </span>
-                        {type === result.recommendedHookType && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-medium">
-                            RECOMMENDED
-                          </span>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        {hooks.map((hook, i) => (
-                          <div 
-                            key={i}
-                            className="flex items-start justify-between gap-3 p-3 rounded-lg bg-white/[0.02] group"
-                          >
-                            <p className="text-[14px] text-zinc-300">{hook.text}</p>
-                            <button
-                              onClick={() => copyToClipboard(hook.text, i)}
-                              className="p-1.5 rounded-md hover:bg-white/[0.05] transition-colors flex-shrink-0 cursor-pointer"
-                            >
-                              {copiedIndex === i ? (
-                                <CheckIcon className="w-4 h-4 text-emerald-400" />
-                              ) : (
-                                <ClipboardIcon className="w-4 h-4 text-zinc-500" />
-                              )}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                <ul className="space-y-3">
+                  {result.strengths.map((s, i) => (
+                    <li key={i} className="text-[14px] text-zinc-300 flex items-start gap-3 leading-relaxed">
+                      <CheckIcon className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                      {s}
+                    </li>
                   ))}
+                </ul>
+              </div>
+            )}
+
+            {/* To Improve - matching analyze page exactly */}
+            {result.improvements && result.improvements.length > 0 && (
+              <div className="p-6 rounded-2xl bg-amber-500/[0.04] border border-amber-500/15">
+                <h3 className="font-semibold text-amber-400 mb-4 flex items-center gap-2.5 text-[15px]">
+                  <span className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
+                    <ArrowRightIcon className="w-4 h-4" />
+                  </span>
+                  To Improve
+                </h3>
+                <ul className="space-y-3">
+                  {result.improvements.map((s, i) => (
+                    <li key={i} className="text-[14px] text-zinc-300 flex items-start gap-3 leading-relaxed">
+                      <ArrowRightIcon className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* The One Thing - matching analyze page exactly */}
+            {result.theOneThing && (
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/[0.08] to-pink-500/[0.04] border border-purple-500/20">
+                <h3 className="font-semibold text-purple-300 mb-3 flex items-center gap-2.5 text-[15px]">
+                  <span className="w-7 h-7 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <SparklesIcon className="w-4 h-4" />
+                  </span>
+                  The One Thing
+                </h3>
+                <p className="text-[14px] text-zinc-200 leading-relaxed">
+                  {result.theOneThing}
+                </p>
+              </div>
+            )}
+
+            {/* Advanced Insight - matching analyze page exactly */}
+            {result.advancedInsight && (
+              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-lg bg-indigo-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <LightBulbIcon className="w-3.5 h-3.5 text-indigo-400" />
+                  </div>
+                  <div>
+                    <span className="text-[12px] font-medium text-indigo-400 uppercase tracking-wide">Pro Insight</span>
+                    <p className="text-[14px] text-zinc-300 leading-relaxed mt-1">
+                      {result.advancedInsight}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Captions */}
-            {result.captions && result.captions.length > 0 && (
-              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] mb-6">
-                <h3 className="text-[13px] font-medium text-zinc-500 uppercase tracking-wide mb-4">
-                  Caption Ideas
+            {/* Trend Format Badge - if present */}
+            {(result as AnalysisResultData & { isTrendFormat?: boolean; trendType?: string }).isTrendFormat && (
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[12px] text-indigo-300 font-medium">
+                  <ChartBarIcon className="w-3.5 h-3.5" />
+                  Trend{(result as AnalysisResultData & { trendType?: string }).trendType ? `: ${(result as AnalysisResultData & { trendType?: string }).trendType}` : ''}
+                </span>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="relative py-8">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/[0.04]" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="px-5 bg-[#09090b] text-[13px] text-zinc-500 font-medium uppercase tracking-wide">
+                  Suggestions
+                </span>
+              </div>
+            </div>
+
+            {/* Hook Suggestions - using shared HookTabs component */}
+            <div>
+              <div className="mb-5">
+                <h3 className="font-semibold text-[15px] mb-1">
+                  {(result as AnalysisResultData & { existingTextOverlay?: string }).existingTextOverlay ? 'Alternative Text Options' : 'Text Overlays'}
                 </h3>
-                <div className="space-y-2">
+                <p className="text-[14px] text-zinc-500">
+                  {(result as AnalysisResultData & { existingTextOverlay?: string }).existingTextOverlay 
+                    ? 'If you want to try something different'
+                    : 'Add one of these in the first 2 seconds'
+                  }
+                </p>
+              </div>
+              <HookTabs 
+                hooks={result.hooks} 
+                recommendedType={result.recommendedHookType as 'curiosity_gap' | 'pattern_interrupt' | 'aspirational'} 
+              />
+              
+              {/* Why this hook type */}
+              {(result as AnalysisResultData & { whyThisHookType?: string }).whyThisHookType && (
+                <p className="mt-4 text-[13px] text-zinc-500 italic">
+                  {(result as AnalysisResultData & { whyThisHookType?: string }).whyThisHookType}
+                </p>
+              )}
+            </div>
+
+            {/* Captions - matching analyze page exactly */}
+            {result.captions && result.captions.length > 0 && (
+              <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="flex items-center gap-2.5 mb-5">
+                  <ChatBubbleBottomCenterTextIcon className="w-5 h-5 text-zinc-400" />
+                  <h3 className="font-semibold text-[15px]">Caption Ideas</h3>
+                </div>
+                <div className="space-y-2.5">
                   {result.captions.map((caption, i) => (
-                    <div 
-                      key={i}
-                      className="flex items-start justify-between gap-3 p-3 rounded-lg bg-white/[0.02] group"
-                    >
-                      <p className="text-[14px] text-zinc-300">{caption}</p>
-                      <button
-                        onClick={() => copyToClipboard(caption, 100 + i)}
-                        className="p-1.5 rounded-md hover:bg-white/[0.05] transition-colors flex-shrink-0 cursor-pointer"
-                      >
-                        {copiedIndex === 100 + i ? (
-                          <CheckIcon className="w-4 h-4 text-emerald-400" />
-                        ) : (
-                          <ClipboardIcon className="w-4 h-4 text-zinc-500" />
-                        )}
-                      </button>
+                    <div key={i} className="flex items-center justify-between gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                      <p className="text-[14px] text-zinc-300 flex-1">{caption}</p>
+                      <CopyButton text={caption} size="sm" />
                     </div>
                   ))}
                 </div>
@@ -361,16 +392,13 @@ export default function HistoryDetailPage() {
           </>
         )}
 
-        {/* Analyze another */}
-        <div className="text-center py-8">
-          <Link
-            href="/analyze"
-            className="inline-flex items-center gap-2 px-6 py-3 text-[14px] font-semibold text-white btn-premium rounded-xl"
-          >
-            <SparklesIcon className="w-4 h-4" />
-            Analyze Another Video
-          </Link>
-        </div>
+        {/* Analyze Another - matching analyze page style */}
+        <button
+          onClick={() => window.location.href = '/analyze'}
+          className="w-full py-4 px-6 font-semibold text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-2xl transition-all duration-200 text-[15px] cursor-pointer"
+        >
+          Analyze Another Video
+        </button>
       </main>
 
       {/* Footer */}
